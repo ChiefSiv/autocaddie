@@ -41,9 +41,12 @@ function YouContent() {
       </div>
 
       <section className="mt-4">
-        <SectionHeader title="Appearance" />
+        <SectionHeader title="Settings" />
         <div className="flex items-center justify-between rounded-lg border border-line bg-card p-4 shadow-card">
-          <span className="text-sm">Theme</span>
+          <div>
+            <span className="text-sm">Theme</span>
+            <p className="text-xs text-muted">Auto follows your device</p>
+          </div>
           <ThemeToggle />
         </div>
       </section>

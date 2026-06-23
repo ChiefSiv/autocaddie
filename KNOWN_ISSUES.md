@@ -69,12 +69,22 @@ live in the scrolling pane.
 
 ## ⚙️ Environment / toolchain gotchas
 
-- **npm TLS on this network — use `--use-system-ca`.** The dev machine sits
-  behind SSL inspection; npm hit `UNABLE_TO_VERIFY_LEAF_SIGNATURE` and each
-  request crawled (~70s, 3 failed retries) before succeeding. Fix: Node 24's
-  `NODE_OPTIONS=--use-system-ca` trusts the Windows cert store → installs run at
-  full speed with package-integrity verification intact (no `strict-ssl=false`).
-  Use it for any `npm install` / `npx` that hits the registry.
+- **TLS on this network — use `--use-system-ca` for anything that fetches.** The
+  dev machine sits behind SSL inspection; Node hit `UNABLE_TO_VERIFY_LEAF_
+  SIGNATURE`. Node 24's `NODE_OPTIONS=--use-system-ca` trusts the OS cert store →
+  works at full speed with integrity verification intact (no `strict-ssl=false`).
+  Two places this bites:
+  - **npm installs:** prefix `NODE_OPTIONS=--use-system-ca npm install …` (or
+    `npx …`). Each registry request otherwise crawls ~70s on 3 failed retries.
+  - **`next build` / `next dev`:** `next/font/google` fetches the three fonts at
+    build time and failed the same way. So the **`dev` and `build` scripts now
+    bake it in** via `cross-env`:
+    `cross-env NODE_OPTIONS=--use-system-ca next build --webpack`. Plain
+    `npm run build` / `npm run dev` now work with no manual prefix. (Harmless on
+    Vercel's Linux, whose system store includes the public CAs.)
+  - **Zero-network alternative (not done):** self-host the fonts via
+    `next/font/local` (commit the woff2 files) to drop the build-time fetch
+    entirely. Revisit if CI/offline builds need it.
 
 ## ⚒️ Next.js 16 specifics (resolved during Phase 0)
 

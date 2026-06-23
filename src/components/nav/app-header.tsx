@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { ThemeToggle } from "@/components/theme/theme-toggle";
 
-/** Sticky brand header with the flag-pin mark and the theme toggle. */
+/** Sticky brand header with the flag-pin mark. (Theme control lives in You → Settings.) */
 export function AppHeader() {
   return (
     <header className="sticky top-0 z-20 -mx-4 mb-1 border-b border-line bg-[color-mix(in_srgb,var(--bg)_86%,transparent)] px-4 backdrop-blur-md">
-      <div className="flex items-center justify-between py-3.5">
+      <div className="flex items-center py-3.5">
         <Link href="/" className="flex items-center gap-2.5" aria-label="Autocaddie home">
           <svg
             viewBox="0 0 24 24"
@@ -21,7 +20,6 @@ export function AppHeader() {
             Autocaddie
           </span>
         </Link>
-        <ThemeToggle />
       </div>
     </header>
   );
