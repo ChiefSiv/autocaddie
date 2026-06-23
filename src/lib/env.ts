@@ -20,6 +20,28 @@ export const publicEnv = {
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
 };
 
+/** True if a value parses as an http(s) URL. */
+export function isHttpUrl(value: string): boolean {
+  try {
+    const u = new URL(value);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Whether Supabase is validly configured. Used so a missing OR malformed
+ * `.env.local` degrades gracefully (auth disabled) instead of throwing
+ * "Invalid supabaseUrl" on every request. Supabase clients construct only
+ * when this is true.
+ */
+export function hasSupabaseEnv(): boolean {
+  return (
+    isHttpUrl(publicEnv.supabaseUrl) && publicEnv.supabaseAnonKey.length > 0
+  );
+}
+
 /**
  * Server-only secrets. Calling this from a client bundle will throw at build
  * (the vars are undefined client-side) — by design.

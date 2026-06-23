@@ -43,8 +43,11 @@ live in the scrolling pane.
   the **Email** provider (magic link). Without anonymous sign-ins, "Start
   playing" / "continue as guest" returns an error.
 - **`.env.local`** must be populated from `.env.example` before the app can talk
-  to Supabase. The app degrades gracefully (middleware no-ops) when unset, but
-  auth won't work.
+  to Supabase. `NEXT_PUBLIC_SUPABASE_URL` must be a **full** `https://<ref>.supabase.co`
+  URL. If it's missing or malformed, the app **degrades gracefully** — the proxy
+  and `useUser` no-op (treated as signed out) instead of throwing
+  "Invalid supabaseUrl" — but auth stays off until a valid URL + anon key are set.
+  (Guarded via `hasSupabaseEnv()` in `src/lib/env.ts`.)
 - **Magic-link redirect:** `NEXT_PUBLIC_SITE_URL` must match the origin and be
   added to Supabase Auth → URL Configuration → Redirect URLs.
 
@@ -75,10 +78,17 @@ live in the scrolling pane.
 
 ## ⚒️ Next.js 16 specifics (resolved during Phase 0)
 
-- **Serwist needs the webpack builder.** `@serwist/next` uses a webpack plugin and
-  doesn't support Turbopack yet (serwist#54). `npm run build` is therefore
-  `next build --webpack`. Dev stays on Turbopack (SW disabled in dev). Revisit
-  `@serwist/turbopack` when it stabilizes.
+- **Serwist needs the webpack builder; dev stays on Turbopack.** `@serwist/next`
+  injects a webpack config (even when disabled) and doesn't support Turbopack yet
+  (serwist#54). Two-part setup so both run cleanly:
+  - **Build:** `npm run build` = `next build --webpack` (Serwist compiles `/sw.js`).
+  - **Dev:** `npm run dev` = `next dev --turbopack`, **plus an empty `turbopack: {}`
+    in `next.config.ts`** — Next 16 dev defaults to Turbopack and otherwise errors
+    with *"using Turbopack, with a webpack config and no turbopack config"*; the
+    empty turbopack config is Next's sanctioned silencer. The SW is disabled in
+    dev, so Serwist's webpack config is inert there.
+
+    Revisit `@serwist/turbopack` when it stabilizes to unify the builders.
 - **`middleware.ts` → `proxy.ts`.** Next 16 renamed the convention; we use
   `src/proxy.ts` exporting `proxy()`. (`src/lib/supabase/middleware.ts` keeps its
   name — it's just the `updateSession` helper, not the convention file.)

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
+import { hasSupabaseEnv } from "@/lib/env";
 
 const USER_KEY = ["auth", "user"] as const;
 
@@ -22,6 +23,8 @@ export function useUser() {
   const query = useQuery({
     queryKey: USER_KEY,
     queryFn: async (): Promise<User | null> => {
+      // Degrade gracefully before Supabase is configured (treated as signed out).
+      if (!hasSupabaseEnv()) return null;
       const supabase = createClient();
       const { data } = await supabase.auth.getUser();
       return data.user ?? null;
@@ -30,6 +33,7 @@ export function useUser() {
   });
 
   useEffect(() => {
+    if (!hasSupabaseEnv()) return;
     const supabase = createClient();
     const {
       data: { subscription },

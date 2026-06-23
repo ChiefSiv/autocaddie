@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { publicEnv } from "@/lib/env";
+import { publicEnv, hasSupabaseEnv } from "@/lib/env";
 
 /**
  * Refreshes the Supabase auth session on every request and writes the rotated
@@ -10,8 +10,10 @@ import { publicEnv } from "@/lib/env";
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
-  // If Supabase isn't configured yet, skip silently (keeps dev unblocked).
-  if (!publicEnv.supabaseUrl || !publicEnv.supabaseAnonKey) {
+  // If Supabase isn't configured (or the URL is malformed), skip silently so a
+  // missing/incomplete .env.local doesn't 500 every request. Auth turns on once
+  // a valid NEXT_PUBLIC_SUPABASE_URL + anon key are present.
+  if (!hasSupabaseEnv()) {
     return response;
   }
 
