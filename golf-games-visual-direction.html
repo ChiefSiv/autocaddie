@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Autocaddie — Visual Direction</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800&family=Saira:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   DESIGN TOKENS  (these map directly to a Tailwind v4 theme later)
+   ============================================================ */
+:root{
+  /* Brand */
+  --fairway:#0E6B3C;       /* primary green — structure & brand        */
+  --fairway-deep:#0A4F2C;
+  --flare:#FF5C24;         /* energy accent — actions & win moments    */
+  --flare-soft:#FFE7DC;
+  --ink:#0B1410;           /* near-black, green undertone — text       */
+  --chalk:#F6F7F3;         /* light app background                     */
+
+  /* Semantic — money keeps the expected up/down */
+  --up:#1FA85A;            /* you're up / win                          */
+  --down:#E0453C;          /* you owe / down                           */
+  --carry:#F2A33C;         /* carryover / press / pending              */
+
+  /* Surfaces (light) */
+  --bg:var(--chalk);
+  --card:#FFFFFF;
+  --line:#E2E6DE;
+  --text:var(--ink);
+  --muted:#5A6B61;
+  --field:#EEF1EB;
+  --shadow:0 1px 2px rgba(11,20,16,.05), 0 8px 24px -12px rgba(11,20,16,.18);
+}
+[data-theme="dark"]{
+  --bg:#0A0F0C;
+  --card:#121A15;
+  --line:#23302A;
+  --text:#EAF2EC;
+  --muted:#8AA095;
+  --field:#1A241E;
+  --fairway:#1FA85A;       /* brighten green on dark for contrast */
+  --flare:#FF6E3D;
+  --flare-soft:#3A1E12;
+  --chalk:#0A0F0C;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:"Hanken Grotesk",system-ui,sans-serif;
+  line-height:1.5;-webkit-font-smoothing:antialiased;
+  transition:background .3s ease,color .3s ease;
+  padding-bottom:60px;
+}
+.wrap{max-width:760px;margin:0 auto;padding:0 18px}
+
+/* Type roles */
+.eyebrow{font-family:"Saira",sans-serif;font-weight:600;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.display{font-family:"Saira Condensed",sans-serif;font-weight:800;line-height:.95;letter-spacing:-.01em;text-transform:uppercase}
+.num{font-family:"Saira Condensed",sans-serif;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+
+/* ============================================================ HEADER */
+header{
+  position:sticky;top:0;z-index:20;
+  background:color-mix(in srgb,var(--bg) 86%,transparent);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.bar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;max-width:760px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px}
+.pin{width:26px;height:26px;flex:none}
+.brand .name{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:21px;text-transform:uppercase;letter-spacing:.02em}
+.brand .tag{font-family:"Saira",sans-serif;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);padding:2px 6px;border-radius:5px}
+.toggle{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--card)}
+.toggle button{font-family:"Saira",sans-serif;font-weight:600;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:7px 11px;border:0;background:transparent;color:var(--muted);cursor:pointer}
+.toggle button[aria-pressed="true"]{background:var(--ink);color:#fff}
+[data-theme="dark"] .toggle button[aria-pressed="true"]{background:var(--fairway);color:#04130b}
+
+/* ============================================================ HERO */
+.hero{padding:34px 0 14px}
+.hero h1{font-family:"Saira Condensed",sans-serif;font-weight:800;text-transform:uppercase;font-size:clamp(38px,11vw,68px);line-height:.9;letter-spacing:-.015em}
+.hero h1 .accent{color:var(--flare)}
+.hero p{margin-top:14px;color:var(--muted);max-width:46ch;font-size:15px}
+
+section{margin-top:42px}
+.sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:16px}
+.sec-head .n{font-family:"Saira Condensed",sans-serif;font-weight:800;color:var(--flare);font-size:15px}
+.sec-head h2{font-family:"Saira Condensed",sans-serif;font-weight:700;text-transform:uppercase;font-size:19px;letter-spacing:.01em}
+
+/* ============================================================ PALETTE */
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:10px}
+.sw{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
+.sw .chip{height:62px}
+.sw .meta{padding:8px 10px}
+.sw .meta .nm{font-family:"Saira",sans-serif;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.sw .meta .hx{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* ============================================================ TYPE SPECIMEN */
+.type-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow)}
+.type-row{display:flex;align-items:baseline;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px dashed var(--line)}
+.type-row:last-child{border-bottom:0}
+.type-row .lab{font-family:"Saira",sans-serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);flex:none;width:96px}
+.spec-disp{font-family:"Saira Condensed",sans-serif;font-weight:800;text-transform:uppercase;font-size:30px;line-height:1}
+.spec-body{font-family:"Hanken Grotesk",sans-serif;font-size:16px}
+.spec-num{font-family:"Saira Condensed",sans-serif;font-weight:700;font-size:34px;font-variant-numeric:tabular-nums}
+
+/* ============================================================ HOLE CARD (the signature) */
+.grid2{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:620px){.grid2{grid-template-columns:1fr 1fr}}
+
+.hole{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden}
+.hole .top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:linear-gradient(180deg,color-mix(in srgb,var(--fairway) 12%,var(--card)),var(--card));border-bottom:1px solid var(--line)}
+.hole .top .hl{display:flex;align-items:baseline;gap:8px}
+.hole .top .hl .h{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:26px;text-transform:uppercase}
+.hole .top .hl .meta{font-family:"Saira",sans-serif;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.dots{display:flex;gap:4px;align-items:center}
+.dots .d{width:9px;height:9px;border-radius:50%;background:var(--flare)}
+.dots .lbl{font-family:"Saira",sans-serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-left:4px}
+
+.stepper{display:flex;align-items:center;justify-content:center;gap:18px;padding:18px 16px}
+.step-btn{width:64px;height:64px;border-radius:18px;border:1px solid var(--line);background:var(--field);color:var(--text);font-size:30px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .08s ease,background .15s}
+.step-btn:active{transform:scale(.92)}
+.step-btn.plus{background:var(--fairway);color:#fff;border-color:transparent}
+.score-display{text-align:center;min-width:104px}
+.score-display .gross{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:72px;line-height:.82;font-variant-numeric:tabular-nums}
+.score-display .net{font-family:"Saira",sans-serif;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.score-display .net b{color:var(--fairway)}
+.hole .foot{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--line);background:var(--field)}
+.hole .foot .who{font-family:"Saira",sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+
+/* ============================================================ SKINS POT */
+.pot{background:var(--ink);color:#fff;border-radius:20px;padding:18px;position:relative;overflow:hidden}
+[data-theme="dark"] .pot{border:1px solid var(--line)}
+.pot .glow{position:absolute;right:-40px;top:-40px;width:160px;height:160px;background:radial-gradient(circle,var(--flare),transparent 70%);opacity:.5}
+.pot .head{display:flex;align-items:center;justify-content:space-between;position:relative}
+.pot .head .lab{font-family:"Saira",sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.7}
+.pot .carry{font-family:"Saira",sans-serif;font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;background:var(--carry);color:#3a2600;padding:3px 8px;border-radius:20px}
+.pot .amt{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:56px;line-height:.9;margin-top:8px;position:relative}
+.pot .amt .dollar{font-size:30px;vertical-align:top;opacity:.8}
+.pot .field-list{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;position:relative}
+.pot .ch{font-family:"Saira",sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:.04em;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);padding:4px 9px;border-radius:8px}
+.pot .ch.lead{background:var(--flare);border-color:transparent;color:#fff}
+
+/* ============================================================ MATCH STATUS */
+.status{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow);text-align:center}
+.status .lab{font-family:"Saira",sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.status .big{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:54px;line-height:.9;text-transform:uppercase;margin:6px 0;color:var(--fairway)}
+.status .thru{font-family:"Saira",sans-serif;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.status .dormie .big{color:var(--flare)}
+
+/* ============================================================ SETTLE ROWS */
+.settle{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+.settle .r{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
+.settle .r:last-child{border-bottom:0}
+.settle .r .nm{font-family:"Hanken Grotesk",sans-serif;font-weight:600}
+.settle .r .sub{font-size:12px;color:var(--muted)}
+.settle .r .val{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:26px;font-variant-numeric:tabular-nums}
+.val.up{color:var(--up)} .val.down{color:var(--down)}
+
+/* ============================================================ BUTTONS */
+.btns{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.btn{font-family:"Saira",sans-serif;font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:14px;padding:14px 22px;border-radius:13px;border:1px solid transparent;cursor:pointer;transition:transform .08s ease,filter .15s}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--flare);color:#fff}
+.btn-primary:hover{filter:brightness(1.06)}
+.btn-secondary{background:transparent;color:var(--text);border-color:var(--line)}
+.btn-green{background:var(--fairway);color:#fff}
+
+/* win stamp demo */
+.stamp{position:relative}
+.flag{display:inline-flex;align-items:center;gap:8px;font-family:"Saira Condensed",sans-serif;font-weight:800;text-transform:uppercase;color:var(--flare);font-size:20px;opacity:0;transform:scale(.8) rotate(-6deg);transition:all .35s cubic-bezier(.2,1.4,.4,1)}
+.flag.show{opacity:1;transform:scale(1) rotate(-6deg)}
+
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand">
+      <svg class="pin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M6 21h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M9 21V4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M9 4l9 3-9 3V4Z" fill="var(--flare)"/>
+      </svg>
+      <span class="name">Autocaddie</span>
+    </div>
+    <div class="toggle" role="group" aria-label="Theme">
+      <button id="tl" aria-pressed="true" onclick="setTheme('light')">Light</button>
+      <button id="td" aria-pressed="false" onclick="setTheme('dark')">Dark</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Visual direction · v1</div>
+    <h1>Keep score.<br>Settle <span class="accent">up.</span></h1>
+    <p>Bold, athletic, and built to be read in full sun and one hand. Green is the brand; orange is the spark. This is the look — the actual screen flow is the next pass.</p>
+  </div>
+
+  <!-- PALETTE -->
+  <section>
+    <div class="sec-head"><span class="n">01</span><h2>Palette</h2></div>
+    <div class="swatches">
+      <div class="sw"><div class="chip" style="background:#0E6B3C"></div><div class="meta"><div class="nm">Fairway</div><div class="hx">#0E6B3C</div></div></div>
+      <div class="sw"><div class="chip" style="background:#FF5C24"></div><div class="meta"><div class="nm">Flare</div><div class="hx">#FF5C24</div></div></div>
+      <div class="sw"><div class="chip" style="background:#0B1410"></div><div class="meta"><div class="nm">Ink</div><div class="hx">#0B1410</div></div></div>
+      <div class="sw"><div class="chip" style="background:#F6F7F3;border-bottom:1px solid #E2E6DE"></div><div class="meta"><div class="nm">Chalk</div><div class="hx">#F6F7F3</div></div></div>
+      <div class="sw"><div class="chip" style="background:#1FA85A"></div><div class="meta"><div class="nm">Up</div><div class="hx">#1FA85A</div></div></div>
+      <div class="sw"><div class="chip" style="background:#E0453C"></div><div class="meta"><div class="nm">Down</div><div class="hx">#E0453C</div></div></div>
+      <div class="sw"><div class="chip" style="background:#F2A33C"></div><div class="meta"><div class="nm">Carry</div><div class="hx">#F2A33C</div></div></div>
+    </div>
+  </section>
+
+  <!-- TYPE -->
+  <section>
+    <div class="sec-head"><span class="n">02</span><h2>Type</h2></div>
+    <div class="type-card">
+      <div class="type-row"><span class="lab">Display</span><span class="spec-disp">All Square</span></div>
+      <div class="type-row"><span class="lab">Scoreboard</span><span class="spec-num">7 · 4 · 38</span></div>
+      <div class="type-row"><span class="lab">Body</span><span class="spec-body">Net birdie on the 7th — that's a skin.</span></div>
+      <div class="type-row"><span class="lab">Label</span><span class="eyebrow">Front 9 · Stroke index 5</span></div>
+      <p style="margin-top:14px;font-size:12px;color:var(--muted)">Saira Condensed (display + scores) · Saira (labels) · Hanken Grotesk (body)</p>
+    </div>
+  </section>
+
+  <!-- SIGNATURE: HOLE CARD + POT -->
+  <section>
+    <div class="sec-head"><span class="n">03</span><h2>In play</h2></div>
+    <div class="grid2">
+
+      <div class="hole">
+        <div class="top">
+          <div class="hl"><span class="h">Hole 7</span><span class="meta">Par 4</span></div>
+          <div class="dots"><span class="d"></span><span class="lbl">1 stroke</span></div>
+        </div>
+        <div class="stepper">
+          <button class="step-btn" aria-label="Lower score">–</button>
+          <div class="score-display">
+            <div class="gross">5</div>
+            <div class="net">net <b>4</b></div>
+          </div>
+          <button class="step-btn plus" aria-label="Raise score">+</button>
+        </div>
+        <div class="foot">
+          <span class="who">Ryan · entering</span>
+          <span class="stamp"><span class="flag" id="flag">⛳ Skin won</span></span>
+        </div>
+      </div>
+
+      <div class="pot">
+        <div class="glow"></div>
+        <div class="head"><span class="lab">Skins · whole outing</span><span class="carry">Carryover ×2</span></div>
+        <div class="amt"><span class="dollar">$</span>60</div>
+        <div class="field-list">
+          <span class="ch lead">Ryan · low net</span>
+          <span class="ch">Dewey</span><span class="ch">Mac</span><span class="ch">+9 more</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- MATCH STATUS -->
+  <section>
+    <div class="sec-head"><span class="n">04</span><h2>Match status</h2></div>
+    <div class="grid2">
+      <div class="status"><div class="lab">Your match · Nassau back 9</div><div class="big">2 Up</div><div class="thru">Thru 13</div></div>
+      <div class="status dormie"><div class="lab">Press · started hole 14</div><div class="big">Dormie</div><div class="thru">3 to play · 3 up</div></div>
+    </div>
+  </section>
+
+  <!-- SETTLE -->
+  <section>
+    <div class="sec-head"><span class="n">05</span><h2>Settle up</h2></div>
+    <div class="settle">
+      <div class="r"><div><div class="nm">You</div><div class="sub">Skins +$45 · Nassau −$21</div></div><div class="val up">+$24</div></div>
+      <div class="r"><div><div class="nm">Dewey pays you</div><div class="sub">1 of 2 payments</div></div><div class="val up">$24</div></div>
+      <div class="r"><div><div class="nm">Mac</div><div class="sub">Owes the pot</div></div><div class="val down">−$18</div></div>
+    </div>
+  </section>
+
+  <!-- BUTTONS -->
+  <section>
+    <div class="sec-head"><span class="n">06</span><h2>Actions</h2></div>
+    <div class="btns">
+      <button class="btn btn-primary" onclick="winSkin()">Save hole</button>
+      <button class="btn btn-green">Start a round</button>
+      <button class="btn btn-secondary">Add a game</button>
+    </div>
+    <p style="margin-top:12px;font-size:12px;color:var(--muted)">Tap “Save hole” to see the win-moment micro-interaction.</p>
+  </section>
+
+  <footer>
+    Visual direction only — palette, type, and component language. The real screen-by-screen
+    flow and the live-scoring interaction come in the next pass. Toggle light/dark above;
+    the light theme is tuned for sun readability.
+  </footer>
+</div>
+
+<script>
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('tl').setAttribute('aria-pressed', t==='light');
+  document.getElementById('td').setAttribute('aria-pressed', t==='dark');
+}
+function winSkin(){
+  const f=document.getElementById('flag');
+  f.classList.add('show');
+  setTimeout(()=>f.classList.remove('show'),1800);
+}
+</script>
+</body>
+</html>

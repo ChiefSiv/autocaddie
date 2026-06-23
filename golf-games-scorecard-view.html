@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Autocaddie — Scorecard View</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800&family=Saira:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fairway:#0E6B3C;--flare:#FF5C24;--flare-soft:#FFE7DC;--ink:#0B1410;--chalk:#F6F7F3;
+  --up:#1FA85A;--down:#E0453C;--carry:#F2A33C;--bg:var(--chalk);--card:#FFFFFF;--line:#E2E6DE;
+  --text:var(--ink);--muted:#5A6B61;--field:#EEF1EB;--shadow:0 1px 2px rgba(11,20,16,.05),0 8px 24px -12px rgba(11,20,16,.18);
+}
+[data-theme="dark"]{
+  --bg:#0A0F0C;--card:#121A15;--line:#23302A;--text:#EAF2EC;--muted:#8AA095;--field:#1A241E;
+  --fairway:#1FA85A;--flare:#FF6E3D;--flare-soft:#3A1E12;--shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:"Hanken Grotesk",system-ui,sans-serif;-webkit-font-smoothing:antialiased;transition:background .3s,color .3s;padding-bottom:84px}
+.wrap{max-width:820px;margin:0 auto;padding:0 14px}
+
+header{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;max-width:820px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:9px}
+.pin{width:24px;height:24px}
+.brand .name{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:19px;text-transform:uppercase}
+.seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--card)}
+.seg button{font-family:"Saira",sans-serif;font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:7px 12px;border:0;background:transparent;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+[data-theme="dark"] .seg button[aria-pressed="true"]{background:var(--fairway);color:#04130b}
+
+.meta{display:flex;align-items:flex-end;justify-content:space-between;padding:18px 2px 12px}
+.meta .info .eyebrow{font-family:"Saira",sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.meta .info h1{font-family:"Saira Condensed",sans-serif;font-weight:800;text-transform:uppercase;font-size:28px;line-height:1;margin-top:2px}
+.tabs{display:flex;gap:6px}
+.tabs button{font-family:"Saira",sans-serif;font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:8px 14px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer}
+.tabs button.on{background:var(--fairway);color:#fff;border-color:transparent}
+
+/* === FROZEN COLUMN = two panes, names never scroll === */
+.cardwrap{display:flex;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);background:var(--card)}
+.namecol{flex:0 0 auto;position:relative;z-index:2;background:var(--card);box-shadow:6px 0 8px -6px rgba(11,20,16,.18)}
+[data-theme="dark"] .namecol{box-shadow:6px 0 8px -6px rgba(0,0,0,.55)}
+.holes{flex:1 1 auto;overflow-x:auto;overflow-y:hidden}
+
+table{border-collapse:separate;border-spacing:0;width:100%}
+tr{vertical-align:middle}
+th,td{white-space:nowrap;font-variant-numeric:tabular-nums;text-align:center}
+
+/* row heights — identical in both panes so rows line up */
+tr.r-h{height:40px}
+tr.r-p{height:28px}
+tr.r-s{height:28px}
+tr.r-pl{height:52px}
+
+/* header / par / si cell looks */
+.r-h th{background:var(--ink);color:#fff;font-family:"Saira Condensed",sans-serif;font-weight:700;font-size:14px}
+[data-theme="dark"] .r-h th{background:#04130b}
+.r-p td,.r-s td{background:var(--field);color:var(--muted);font-family:"Saira",sans-serif;font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+.r-p td b{color:var(--text);font-weight:700}
+.r-s td{border-bottom:1px solid var(--line)}
+
+/* name pane cells */
+.namecol .r-h th{text-align:left;padding-left:12px;min-width:112px}
+.namecol .r-p td,.namecol .r-s td{text-align:left;padding-left:12px}
+.namecol .r-pl td{text-align:left;padding-left:12px;border-bottom:1px solid var(--line);font-family:"Hanken Grotesk",sans-serif;font-weight:700;font-size:14px}
+.namecol .r-pl:last-child td{border-bottom:0}
+.namecol .r-pl .hc{display:block;font-family:"Saira",sans-serif;font-weight:500;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:1px}
+
+/* holes pane cells */
+.holes th,.holes td{min-width:46px;padding:0 2px}
+.holes .r-pl td{border-bottom:1px solid var(--line)}
+.holes .r-pl:last-child td{border-bottom:0}
+.holes .totcol{background:var(--field);box-shadow:inset 2px 0 0 var(--line)}
+
+/* gross + net */
+.cell{display:inline-flex;align-items:flex-start;justify-content:center;gap:1px}
+.g{font-family:"Saira Condensed",sans-serif;font-weight:700;font-size:19px;line-height:1.05;color:var(--text)}
+.n{font-family:"Saira Condensed",sans-serif;font-weight:700;font-size:11px;line-height:1;color:var(--flare);margin-top:1px}
+.totcol .g{font-size:18px}
+.g.ring{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:2px solid var(--flare);border-radius:50%;color:var(--flare)}
+.g.box{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1.5px solid var(--down);border-radius:6px;color:var(--down)}
+
+.legend{display:flex;flex-wrap:wrap;gap:16px;padding:14px 2px 2px;font-size:12px;color:var(--muted);align-items:center}
+.legend .it{display:flex;align-items:center;gap:7px}
+.legend .ex{display:inline-flex;align-items:flex-start;gap:1px}
+.legend .ex .g{font-size:16px}.legend .ex .n{font-size:10px}
+.legend .mk{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-family:"Saira Condensed",sans-serif;font-weight:700;font-size:11px}
+.mk.b{border:2px solid var(--flare);border-radius:50%;color:var(--flare)}
+.mk.x{border:1.5px solid var(--down);border-radius:4px;color:var(--down)}
+
+.strip{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.gcard{border-radius:14px;padding:14px;border:1px solid var(--line);background:var(--card);box-shadow:var(--shadow)}
+.gcard .lab{font-family:"Saira",sans-serif;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.gcard .big{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:30px;line-height:1;margin-top:4px}
+.gcard.match .big{color:var(--fairway)}
+.gcard .sub{font-size:11px;color:var(--muted);margin-top:3px}
+.tagc{display:inline-block;font-family:"Saira",sans-serif;font-size:10px;letter-spacing:.06em;text-transform:uppercase;background:var(--carry);color:#3a2600;padding:2px 7px;border-radius:20px;margin-left:6px;vertical-align:middle}
+
+.fab{position:fixed;left:0;right:0;bottom:0;padding:14px;background:linear-gradient(180deg,transparent,var(--bg) 38%);z-index:25}
+.fab .inner{max-width:820px;margin:0 auto;display:flex;gap:10px}
+.btn{flex:1;font-family:"Saira",sans-serif;font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:14px;padding:15px;border-radius:13px;border:1px solid transparent;cursor:pointer}
+.btn-primary{background:var(--flare);color:#fff}
+.btn-secondary{background:var(--card);color:var(--text);border-color:var(--line);flex:0 0 auto;padding:15px 18px}
+.hint{font-size:11px;color:var(--muted);text-align:center;padding-top:8px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand">
+      <svg class="pin" viewBox="0 0 24 24" fill="none"><path d="M6 21h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 21V4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 4l9 3-9 3V4Z" fill="var(--flare)"/></svg>
+      <span class="name">Autocaddie</span>
+    </div>
+    <div class="seg" role="group" aria-label="View">
+      <button aria-pressed="true">Card</button>
+      <button aria-pressed="false">Hole</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="meta">
+    <div class="info">
+      <div class="eyebrow">Maketewah CC · Sat 8:10</div>
+      <h1>The Card</h1>
+    </div>
+    <div class="tabs">
+      <button class="on" onclick="jump('front',this)">Front</button>
+      <button onclick="jump('back',this)">Back</button>
+    </div>
+  </div>
+
+  <div class="cardwrap">
+
+    <!-- FROZEN NAME PANE (never scrolls) -->
+    <div class="namecol">
+      <table>
+        <tr class="r-h"><th>Hole</th></tr>
+        <tr class="r-p"><td><b>Par</b></td></tr>
+        <tr class="r-s"><td>S.I.</td></tr>
+        <tr class="r-pl"><td>Ryan<span class="hc">HCP 8</span></td></tr>
+        <tr class="r-pl"><td>Dewey<span class="hc">HCP 14</span></td></tr>
+        <tr class="r-pl"><td>Mac<span class="hc">HCP 5</span></td></tr>
+        <tr class="r-pl"><td>T.J.<span class="hc">HCP 20</span></td></tr>
+      </table>
+    </div>
+
+    <!-- SCROLLING HOLES PANE -->
+    <div class="holes" id="holes">
+      <table>
+        <tr class="r-h">
+          <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th>
+          <th class="totcol">Out</th>
+          <th id="h10">10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th><th>18</th>
+          <th class="totcol">In</th><th class="totcol">Tot</th>
+        </tr>
+        <tr class="r-p">
+          <td>4</td><td>4</td><td>3</td><td>5</td><td>4</td><td>4</td><td>3</td><td>4</td><td>5</td>
+          <td class="totcol">36</td>
+          <td>4</td><td>5</td><td>4</td><td>3</td><td>4</td><td>4</td><td>5</td><td>3</td><td>4</td>
+          <td class="totcol">36</td><td class="totcol">72</td>
+        </tr>
+        <tr class="r-s">
+          <td>5</td><td>11</td><td>17</td><td>1</td><td>7</td><td>13</td><td>15</td><td>3</td><td>9</td>
+          <td class="totcol"></td>
+          <td>6</td><td>2</td><td>12</td><td>18</td><td>8</td><td>4</td><td>10</td><td>16</td><td>14</td>
+          <td class="totcol"></td><td class="totcol"></td>
+        </tr>
+
+        <!-- RYAN -->
+        <tr class="r-pl">
+          <td><span class="cell"><span class="g">5</span><span class="n">4</span></span></td>
+          <td><span class="cell"><span class="g">4</span></span></td>
+          <td><span class="cell"><span class="g">3</span></span></td>
+          <td><span class="cell"><span class="g">6</span><span class="n">5</span></span></td>
+          <td><span class="cell"><span class="g">4</span><span class="n">3</span></span></td>
+          <td><span class="cell"><span class="g">5</span></span></td>
+          <td><span class="cell"><span class="g ring">2</span></span></td>
+          <td><span class="cell"><span class="g">4</span><span class="n">3</span></span></td>
+          <td><span class="cell"><span class="g">5</span></span></td>
+          <td class="totcol"><span class="cell"><span class="g">38</span><span class="n">34</span></span></td>
+          <td><span class="cell"><span class="g">4</span><span class="n">3</span></span></td>
+          <td><span class="cell"><span class="g">5</span><span class="n">4</span></span></td>
+          <td><span class="cell"><span class="g">3</span></span></td>
+          <td><span class="cell"><span class="g">4</span></span></td>
+          <td><span class="cell"><span class="g">5</span></span></td>
+          <td><span class="cell"><span class="g">5</span><span class="n">4</span></span></td>
+          <td><span class="cell"><span class="g">4</span><span class="n">3</span></span></td>
+          <td><span class="cell"><span class="g">3</span></span></td>
+          <td><span class="cell"><span class="g">5</span></span></td>
+          <td class="totcol"><span class="cell"><span class="g">38</span><span class="n">34</span></span></td>
+          <td class="totcol"><span class="cell"><span class="g">76</span><span class="n">68</span></span></td>
+        </tr>
+        <!-- DEWEY -->
+        <tr class="r-pl">
+          <td><span class="cell"><span class="g">6</span><span class="n">5</span></span></td>
+          <td><span class="cell"><span class="g">5</span><span class="n">4</span></span></td>
+          <td><span class="cell"><span class="g">4</span></span></td>
+          <td><span class="cell"><span class="g">6</span><span class="n">5</span></span></td>
+          <td><span class="cell"><span class="g">5</span><span class="n">4</span></span></td>
+          <td><span class="cell"><span class="g">5</span><span class="n">4</span></span></td>
+          <td><span class="cell"><span class="g">3</span></span></td>
+          <td><span class="cell"><span class="g">5</span><span class="n">4</span></span></td>
+          <td><span class="cell"><span class="g">6</span><span class="n">5</span></span></td>
+          <td class="totcol"><span class="cell"><span class="g">45</span><span class="n">38</span></span></td>
+          <td><span class="cell"><span class="g">5</span><span class="n">4</span></span></td>
+          <td><span class="cell"><span class="g">6</span><span class="n">5</span></span></td>
+          <td><span class="cell"><span class="g">4</span><span class="n">3</span></span></td>
+          <td><span class="cell"><span class="g">5</span></span></td>
+          <td><span class="cell"><span class="g">5</span><span class="n">4</span></span></td>
+          <td><span class="cell"><span class="g">6</span><span class="n">5</span></span></td>
+          <td><span class="cell"><span class="g">5</span><span class="n">4</span></span></td>
+          <td><span class="cell"><span class="g">4</span></span></td>
+          <td><span class="cell"><span class="g">6</span><span class="n">5</span></span></td>
+          <td class="totcol"><span class="cell"><span class="g">46</span><span class="n">39</span></span></td>
+          <td class="totcol"><span class="cell"><span class="g">91</span><span class="n">77</span></span></td>
+        </tr>
+        <!-- MAC -->
+        <tr class="r-pl">
+          <td><span class="cell"><span class="g">4</span><span class="n">3</span></span></td>
+          <td><span class="cell"><span class="g">4</span></span></td>
+          <td><span class="cell"><span class="g">3</span></span></td>
+          <td><span class="cell"><span class="g">5</span><span class="n">4</span></span></td>
+          <td><span class="cell"><span class="g">4</span></span></td>
+          <td><span class="cell"><span class="g">4</span></span></td>
+          <td><span class="cell"><span class="g">3</span></span></td>
+          <td><span class="cell"><span class="g ring">3</span><span class="n">2</span></span></td>
+          <td><span class="cell"><span class="g">5</span></span></td>
+          <td class="totcol"><span class="cell"><span class="g">35</span><span class="n">32</span></span></td>
+          <td><span class="cell"><span class="g">4</span></span></td>
+          <td><span class="cell"><span class="g">5</span><span class="n">4</span></span></td>
+          <td><span class="cell"><span class="g">4</span></span></td>
+          <td><span class="cell"><span class="g">3</span></span></td>
+          <td><span class="cell"><span class="g">4</span></span></td>
+          <td><span class="cell"><span class="g">4</span><span class="n">3</span></span></td>
+          <td><span class="cell"><span class="g">5</span></span></td>
+          <td><span class="cell"><span class="g">3</span></span></td>
+          <td><span class="cell"><span class="g">4</span></span></td>
+          <td class="totcol"><span class="cell"><span class="g">36</span><span class="n">34</span></span></td>
+          <td class="totcol"><span class="cell"><span class="g">71</span><span class="n">66</span></span></td>
+        </tr>
+        <!-- T.J. -->
+        <tr class="r-pl">
+          <td><span class="cell"><span class="g">6</span><span class="n">5</span></span></td>
+          <td><span class="cell"><span class="g">6</span><span class="n">5</span></span></td>
+          <td><span class="cell"><span class="g">4</span><span class="n">3</span></span></td>
+          <td><span class="cell"><span class="g box">7</span><span class="n">5</span></span></td>
+          <td><span class="cell"><span class="g">5</span><span class="n">4</span></span></td>
+          <td><span class="cell"><span class="g">6</span><span class="n">5</span></span></td>
+          <td><span class="cell"><span class="g">4</span><span class="n">3</span></span></td>
+          <td><span class="cell"><span class="g">6</span><span class="n">5</span></span></td>
+          <td><span class="cell"><span class="g">7</span><span class="n">6</span></span></td>
+          <td class="totcol"><span class="cell"><span class="g">51</span><span class="n">41</span></span></td>
+          <td><span class="cell"><span class="g">5</span><span class="n">4</span></span></td>
+          <td><span class="cell"><span class="g">7</span><span class="n">5</span></span></td>
+          <td><span class="cell"><span class="g">5</span><span class="n">4</span></span></td>
+          <td><span class="cell"><span class="g">4</span><span class="n">3</span></span></td>
+          <td><span class="cell"><span class="g">6</span><span class="n">5</span></span></td>
+          <td><span class="cell"><span class="g">6</span><span class="n">5</span></span></td>
+          <td><span class="cell"><span class="g">7</span><span class="n">6</span></span></td>
+          <td><span class="cell"><span class="g">4</span><span class="n">3</span></span></td>
+          <td><span class="cell"><span class="g">6</span><span class="n">5</span></span></td>
+          <td class="totcol"><span class="cell"><span class="g">50</span><span class="n">40</span></span></td>
+          <td class="totcol"><span class="cell"><span class="g">101</span><span class="n">81</span></span></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="it"><span class="ex"><span class="g">5</span><span class="n">4</span></span> Gross + net (orange = stroke given)</div>
+    <div class="it"><span class="mk b">3</span> Birdie or better</div>
+    <div class="it"><span class="mk x">7</span> Double+</div>
+    <div class="it">Tap a cell to enter</div>
+  </div>
+
+  <div class="strip">
+    <div class="gcard skins">
+      <div class="lab">Skins · whole outing</div>
+      <div class="big">$60 <span class="tagc">carryover</span></div>
+      <div class="sub">Ryan leads · low net on 7</div>
+    </div>
+    <div class="gcard match">
+      <div class="lab">Your match · vs Mac</div>
+      <div class="big">2 Up</div>
+      <div class="sub">Thru 9 · front 9 won</div>
+    </div>
+  </div>
+</div>
+
+<div class="fab">
+  <div class="inner">
+    <button class="btn btn-primary">Enter hole 10</button>
+    <button class="btn btn-secondary">Games</button>
+  </div>
+  <div class="hint">Names stay frozen · swipe the holes to see all 18</div>
+</div>
+
+<script>
+function jump(where,btn){
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  const s=document.getElementById('holes');
+  if(where==='front'){s.scrollTo({left:0,behavior:'smooth'});}
+  else{const t=document.getElementById('h10');s.scrollTo({left:t.offsetLeft-4,behavior:'smooth'});}
+}
+if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+  document.documentElement.setAttribute('data-theme','dark');
+}
+</script>
+</body>
+</html>

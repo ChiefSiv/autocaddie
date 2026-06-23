@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Autocaddie — Round Home (single game)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800&family=Saira:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fairway:#0E6B3C;--flare:#FF5C24;--flare-soft:#FFE7DC;--ink:#0B1410;--chalk:#F6F7F3;
+  --up:#1FA85A;--down:#E0453C;--carry:#F2A33C;--bg:var(--chalk);--card:#FFFFFF;--line:#E2E6DE;
+  --text:var(--ink);--muted:#5A6B61;--field:#EEF1EB;--shadow:0 1px 2px rgba(11,20,16,.05),0 8px 24px -12px rgba(11,20,16,.18);
+}
+[data-theme="dark"]{
+  --bg:#0A0F0C;--card:#121A15;--line:#23302A;--text:#EAF2EC;--muted:#8AA095;--field:#1A241E;
+  --fairway:#1FA85A;--flare:#FF6E3D;--flare-soft:#3A1E12;--shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:"Hanken Grotesk",system-ui,sans-serif;-webkit-font-smoothing:antialiased;transition:background .3s,color .3s;padding-bottom:96px}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px}
+
+header{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;max-width:560px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:9px}
+.pin{width:24px;height:24px}
+.brand .name{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:19px;text-transform:uppercase}
+.seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--card)}
+.seg button{font-family:"Saira",sans-serif;font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:7px 12px;border:0;background:transparent;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+[data-theme="dark"] .seg button[aria-pressed="true"]{background:var(--fairway);color:#04130b}
+
+.head{padding:18px 2px 2px;display:flex;align-items:flex-end;justify-content:space-between}
+.head .eyebrow{font-family:"Saira",sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.head h1{font-family:"Saira Condensed",sans-serif;font-weight:800;text-transform:uppercase;font-size:30px;line-height:1;margin-top:2px}
+.thru{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:24px;color:var(--fairway)}
+.thru small{display:block;font-family:"Saira",sans-serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:right}
+
+/* HERO single game */
+.hero{background:var(--ink);color:#fff;border-radius:22px;padding:20px;margin-top:14px;position:relative;overflow:hidden}
+[data-theme="dark"] .hero{border:1px solid var(--line)}
+.hero .glow{position:absolute;right:-50px;top:-50px;width:200px;height:200px;background:radial-gradient(circle,var(--flare),transparent 68%);opacity:.5}
+.hero .topline{display:flex;align-items:center;justify-content:space-between;position:relative}
+.hero .gname{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:30px;text-transform:uppercase;letter-spacing:.01em}
+.hero .gmeta{font-family:"Saira",sans-serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-top:2px}
+.hero .pot{text-align:right}
+.hero .pot .v{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:30px;line-height:1}
+.hero .pot .carry{font-family:"Saira",sans-serif;font-size:10px;letter-spacing:.05em;text-transform:uppercase;background:var(--carry);color:#3a2600;padding:2px 7px;border-radius:20px;display:inline-block;margin-top:4px}
+
+.board{position:relative;margin-top:16px;display:flex;flex-direction:column;gap:2px}
+.lb{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:11px;background:rgba(255,255,255,.05)}
+.lb.lead{background:var(--flare);}
+.lb .rk{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:16px;width:16px;opacity:.7}
+.lb.lead .rk{opacity:1}
+.lb .who{flex:1;font-family:"Hanken Grotesk",sans-serif;font-weight:700;font-size:15px}
+.lb .who small{font-family:"Saira",sans-serif;font-weight:500;font-size:10px;letter-spacing:.05em;text-transform:uppercase;opacity:.7;margin-left:6px}
+.lb .sk{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:22px;font-variant-numeric:tabular-nums}
+.lb .sk small{font-family:"Saira",sans-serif;font-weight:500;font-size:10px;letter-spacing:.06em;text-transform:uppercase;opacity:.75;margin-left:5px}
+
+/* card preview */
+.cardlink{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px;margin-top:14px;cursor:pointer}
+.cardlink .t{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:17px;text-transform:uppercase}
+.cardlink .s{font-size:12px;color:var(--muted);margin-top:1px}
+.cardlink .go{font-family:"Saira",sans-serif;font-size:18px;color:var(--muted)}
+
+/* add a game doorway */
+.addgame{margin-top:14px;border:1.5px dashed var(--line);border-radius:14px;padding:16px;text-align:center;background:transparent;width:100%;cursor:pointer}
+.addgame .plus{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:18px;text-transform:uppercase;color:var(--fairway)}
+.addgame .hint{font-size:12px;color:var(--muted);margin-top:3px}
+
+/* cta */
+.fab{position:fixed;left:0;right:0;bottom:0;padding:14px 16px;background:linear-gradient(180deg,transparent,var(--bg) 36%);z-index:25}
+.fab .inner{max-width:560px;margin:0 auto;display:flex;gap:10px}
+.btn{flex:1;font-family:"Saira",sans-serif;font-weight:700;letter-spacing:.07em;text-transform:uppercase;font-size:15px;padding:16px;border-radius:14px;border:0;background:var(--flare);color:#fff;cursor:pointer}
+.btn.sec{flex:0 0 auto;background:var(--card);color:var(--text);border:1px solid var(--line);padding:16px 18px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand">
+      <svg class="pin" viewBox="0 0 24 24" fill="none"><path d="M6 21h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 21V4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 4l9 3-9 3V4Z" fill="var(--flare)"/></svg>
+      <span class="name">Autocaddie</span>
+    </div>
+    <div class="seg" role="group" aria-label="View">
+      <button aria-pressed="true">Game</button>
+      <button aria-pressed="false">Card</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="head">
+    <div>
+      <div class="eyebrow">Maketewah CC · Saturday</div>
+      <h1>The Round</h1>
+    </div>
+    <div class="thru">9<small>thru</small></div>
+  </div>
+
+  <!-- THE ONE GAME, AS HERO -->
+  <div class="hero">
+    <div class="glow"></div>
+    <div class="topline">
+      <div>
+        <div class="gname">Skins</div>
+        <div class="gmeta">Net · $5 a hole</div>
+      </div>
+      <div class="pot">
+        <div class="v">$45</div>
+        <span class="carry">$10 riding on 10</span>
+      </div>
+    </div>
+
+    <div class="board">
+      <div class="lb lead"><span class="rk">1</span><span class="who">Ryan <small>you</small></span><span class="sk">3<small>skins</small></span></div>
+      <div class="lb"><span class="rk">2</span><span class="who">Mac</span><span class="sk">2<small>skins</small></span></div>
+      <div class="lb"><span class="rk">3</span><span class="who">Dewey</span><span class="sk">1<small>skin</small></span></div>
+      <div class="lb"><span class="rk">4</span><span class="who">T.J.</span><span class="sk">0<small>skins</small></span></div>
+    </div>
+  </div>
+
+  <!-- scorecard is one tap away, not competing for attention -->
+  <div class="cardlink">
+    <div>
+      <div class="t">The card</div>
+      <div class="s">Ryan 38 (34 net) · thru 9 · low net leads</div>
+    </div>
+    <div class="go">›</div>
+  </div>
+
+  <!-- the doorway to multi-game -->
+  <button class="addgame">
+    <div class="plus">+ Add a game</div>
+    <div class="hint">Most rounds are just one. Stack a Nassau, match, or whole-outing skins anytime.</div>
+  </button>
+</div>
+
+<div class="fab">
+  <div class="inner">
+    <button class="btn">Enter hole 10</button>
+    <button class="btn sec">Players</button>
+  </div>
+</div>
+
+<script>
+if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+  document.documentElement.setAttribute('data-theme','dark');
+}
+</script>
+</body>
+</html>

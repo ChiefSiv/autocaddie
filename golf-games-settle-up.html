@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Autocaddie — Settle Up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800&family=Saira:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fairway:#0E6B3C;--flare:#FF5C24;--flare-soft:#FFE7DC;--ink:#0B1410;--chalk:#F6F7F3;
+  --up:#1FA85A;--down:#E0453C;--carry:#F2A33C;--bg:var(--chalk);--card:#FFFFFF;--line:#E2E6DE;
+  --text:var(--ink);--muted:#5A6B61;--field:#EEF1EB;--shadow:0 1px 2px rgba(11,20,16,.05),0 8px 24px -12px rgba(11,20,16,.18);
+}
+[data-theme="dark"]{
+  --bg:#0A0F0C;--card:#121A15;--line:#23302A;--text:#EAF2EC;--muted:#8AA095;--field:#1A241E;
+  --fairway:#1FA85A;--flare:#FF6E3D;--flare-soft:#3A1E12;--shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:"Hanken Grotesk",system-ui,sans-serif;-webkit-font-smoothing:antialiased;transition:background .3s,color .3s;padding-bottom:40px}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px}
+
+header{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;max-width:560px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:9px}
+.pin{width:24px;height:24px}
+.brand .name{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:19px;text-transform:uppercase}
+.x{font-family:"Saira",sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);background:none;border:0;cursor:pointer}
+
+.head{padding:20px 2px 4px}
+.head .eyebrow{font-family:"Saira",sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.head h1{font-family:"Saira Condensed",sans-serif;font-weight:800;text-transform:uppercase;font-size:34px;line-height:.95;margin-top:3px}
+
+/* hero result */
+.hero{background:var(--ink);color:#fff;border-radius:20px;padding:22px;margin-top:16px;position:relative;overflow:hidden}
+[data-theme="dark"] .hero{border:1px solid var(--line)}
+.hero .glow{position:absolute;left:-30px;bottom:-50px;width:180px;height:180px;background:radial-gradient(circle,var(--up),transparent 70%);opacity:.4}
+.hero .lab{font-family:"Saira",sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.7;position:relative}
+.hero .big{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:74px;line-height:.86;margin-top:4px;color:#fff;position:relative}
+.hero .big.win{color:#5BE08C}
+.hero .brk{position:relative;display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.hero .bk{font-family:"Saira",sans-serif;font-size:11px;letter-spacing:.04em;text-transform:uppercase;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);padding:5px 10px;border-radius:8px}
+.hero .bk b{color:#5BE08C} .hero .bk b.dn{color:#FF8A7A}
+
+/* field strip */
+.field{display:flex;gap:8px;overflow-x:auto;margin-top:14px;padding-bottom:2px}
+.fp{flex:none;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 12px;text-align:center;min-width:78px}
+.fp .nm{font-family:"Saira",sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.fp .v{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:20px;line-height:1;margin-top:2px}
+.fp .v.up{color:var(--up)} .fp .v.dn{color:var(--down)}
+
+/* view toggle */
+.vt{display:flex;gap:8px;padding:6px;background:var(--card);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);margin-top:22px}
+.vt button{flex:1;font-family:"Saira",sans-serif;font-weight:600;font-size:12px;letter-spacing:.05em;text-transform:uppercase;padding:12px;border-radius:9px;border:0;background:transparent;color:var(--muted);cursor:pointer}
+.vt button.on{background:var(--ink);color:#fff}
+[data-theme="dark"] .vt button.on{background:var(--fairway);color:#04130b}
+
+.note{font-size:12px;color:var(--muted);text-align:center;margin-top:12px}
+
+/* payment rows */
+.pays{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+.pay{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px;display:flex;align-items:center;gap:12px}
+.flow{flex:1;display:flex;align-items:center;gap:9px}
+.av{width:34px;height:34px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:15px;color:#fff}
+.av.r{background:var(--fairway)} .av.d{background:var(--flare)} .av.m{background:#2563EB} .av.t{background:#7C3AED}
+.arr{color:var(--muted);font-size:18px}
+.flow .who{font-weight:600;font-size:14px}
+.flow .who small{display:block;font-family:"Saira",sans-serif;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.pay .right{display:flex;align-items:center;gap:10px}
+.pay .amt{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:24px;font-variant-numeric:tabular-nums}
+.pay .acts{display:flex;flex-direction:column;gap:5px}
+.mini{font-family:"Saira",sans-serif;font-weight:600;font-size:10px;letter-spacing:.05em;text-transform:uppercase;padding:6px 10px;border-radius:8px;cursor:pointer;border:1px solid var(--line);background:var(--field);color:var(--text)}
+.mini.venmo{background:var(--flare);color:#fff;border-color:transparent}
+
+/* by-game cards */
+.gview{display:none;margin-top:14px;flex-direction:column;gap:12px}
+.gcard{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+.gcard .gh{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,color-mix(in srgb,var(--fairway) 9%,var(--card)),var(--card))}
+.gcard .gh .gt{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:19px;text-transform:uppercase}
+.gcard .gh .meta{font-family:"Saira",sans-serif;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.gr{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid var(--line)}
+.gr:last-child{border-bottom:0}
+.gr .l{display:flex;align-items:center;gap:9px;font-weight:600;font-size:14px}
+.gr .sub{font-size:11px;color:var(--muted)}
+.gr .val{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:20px;font-variant-numeric:tabular-nums}
+.val.up{color:var(--up)} .val.dn{color:var(--down)} .val.zero{color:var(--muted)}
+.bragtag{font-family:"Saira",sans-serif;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--carry);border:1px solid color-mix(in srgb,var(--carry) 40%,var(--line));padding:3px 8px;border-radius:20px}
+
+.show{display:flex}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand">
+      <svg class="pin" viewBox="0 0 24 24" fill="none"><path d="M6 21h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 21V4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 4l9 3-9 3V4Z" fill="var(--flare)"/></svg>
+      <span class="name">Autocaddie</span>
+    </div>
+    <button class="x">Done</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="head">
+    <div class="eyebrow">Maketewah CC · Sat · 18 holes</div>
+    <h1>Settle up</h1>
+  </div>
+
+  <div class="hero">
+    <div class="glow"></div>
+    <div class="lab">Your day</div>
+    <div class="big win">+$24</div>
+    <div class="brk">
+      <span class="bk">Skins <b>+$45</b></span>
+      <span class="bk">Nassau <b class="dn">−$21</b></span>
+      <span class="bk">Match · won, no money</span>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="fp"><div class="nm">Mac</div><div class="v up">+$31</div></div>
+    <div class="fp"><div class="nm">Ryan</div><div class="v up">+$24</div></div>
+    <div class="fp"><div class="nm">Dewey</div><div class="v dn">−$18</div></div>
+    <div class="fp"><div class="nm">T.J.</div><div class="v dn">−$37</div></div>
+  </div>
+
+  <div class="vt">
+    <button class="on" id="vtA" onclick="view('pay')">Who pays whom</button>
+    <button id="vtB" onclick="view('game')">By game</button>
+  </div>
+  <div class="note" id="note">Fewest payments to square the whole day · we just track it, pay however you like</div>
+
+  <!-- MINIMIZED PAYMENTS -->
+  <div class="pays" id="payview">
+    <div class="pay">
+      <div class="flow"><div class="av t">T</div><span class="arr">→</span><div class="av m">M</div><div class="who">T.J. pays Mac<small>1 of 3</small></div></div>
+      <div class="right"><span class="amt">$31</span><div class="acts"><button class="mini venmo">Venmo</button><button class="mini">Mark paid</button></div></div>
+    </div>
+    <div class="pay">
+      <div class="flow"><div class="av d">D</div><span class="arr">→</span><div class="av r">R</div><div class="who">Dewey pays Ryan<small>2 of 3</small></div></div>
+      <div class="right"><span class="amt">$18</span><div class="acts"><button class="mini venmo">Venmo</button><button class="mini">Mark paid</button></div></div>
+    </div>
+    <div class="pay">
+      <div class="flow"><div class="av t">T</div><span class="arr">→</span><div class="av r">R</div><div class="who">T.J. pays Ryan<small>3 of 3</small></div></div>
+      <div class="right"><span class="amt">$6</span><div class="acts"><button class="mini venmo">Venmo</button><button class="mini">Mark paid</button></div></div>
+    </div>
+  </div>
+
+  <!-- BY GAME -->
+  <div class="gview" id="gameview">
+    <div class="gcard">
+      <div class="gh"><span class="gt">Skins</span><span class="meta">Whole outing · $90 pot</span></div>
+      <div class="gr"><div><div class="l">Mac</div><div class="sub">4 skins</div></div><span class="val up">+$38</span></div>
+      <div class="gr"><div><div class="l">Ryan</div><div class="sub">3 skins · incl. hole 7</div></div><span class="val up">+$45</span></div>
+      <div class="gr"><div><div class="l">Dewey</div><div class="sub">1 skin</div></div><span class="val dn">−$2</span></div>
+      <div class="gr"><div><div class="l">T.J.</div><div class="sub">0 skins</div></div><span class="val dn">−$23</span></div>
+    </div>
+    <div class="gcard">
+      <div class="gh"><span class="gt">Nassau</span><span class="meta">This group · $20 / side</span></div>
+      <div class="gr"><div><div class="l">Front 9</div><div class="sub">Mac def. Ryan</div></div><span class="val dn">−$20</span></div>
+      <div class="gr"><div><div class="l">Back 9</div><div class="sub">Ryan def. Mac</div></div><span class="val up">+$20</span></div>
+      <div class="gr"><div><div class="l">Total 18</div><div class="sub">Mac def. Ryan</div></div><span class="val dn">−$21</span></div>
+    </div>
+    <div class="gcard">
+      <div class="gh"><span class="gt">Match Play</span><span class="bragtag">Bragging rights</span></div>
+      <div class="gr"><div><div class="l">Ryan def. Mac</div><div class="sub">2 &amp; 1</div></div><span class="val zero">No money</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function view(v){
+  const a=document.getElementById('vtA'),b=document.getElementById('vtB');
+  const pv=document.getElementById('payview'),gv=document.getElementById('gameview'),note=document.getElementById('note');
+  if(v==='pay'){a.classList.add('on');b.classList.remove('on');pv.style.display='flex';gv.classList.remove('show');note.textContent='Fewest payments to square the whole day · we just track it, pay however you like';}
+  else{b.classList.add('on');a.classList.remove('on');pv.style.display='none';gv.classList.add('show');note.textContent='Each game settled on its own · totals roll into the payments above';}
+}
+if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+  document.documentElement.setAttribute('data-theme','dark');
+}
+</script>
+</body>
+</html>

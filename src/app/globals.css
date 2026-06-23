@@ -1,0 +1,225 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* The `dark:` utility variant must mirror the token rules below:
+   forced dark, OR OS-dark while not forced light. Keeps `dark:` consistent
+   with the CSS-variable theme so manual overrides win. shadcn components and
+   our own utilities both rely on this. */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
+/* ============================================================================
+   AUTOCADDIE DESIGN TOKENS  (§4 of the build prompt — visual ground truth)
+   These are the authoritative palette. shadcn's semantic tokens are DERIVED
+   from these further down, so theming flips correctly with no `.dark` block.
+   - no attr / data-theme="system" -> follow OS
+   - data-theme="light"            -> force light
+   - data-theme="dark"             -> force dark
+   ========================================================================== */
+:root {
+  /* Brand */
+  --fairway: #0e6b3c;        /* primary green — structure & brand        */
+  --fairway-deep: #0a4f2c;
+  --flare: #ff5c24;          /* energy accent — actions & win moments    */
+  --flare-soft: #ffe7dc;
+  --ink: #0b1410;            /* near-black, green undertone — text       */
+  --chalk: #f6f7f3;          /* light app background                     */
+
+  /* Semantic — money keeps the expected up/down/carry */
+  --up: #1fa85a;
+  --down: #e0453c;
+  --carry: #f2a33c;
+
+  /* Surfaces (light) */
+  --bg: var(--chalk);
+  --card: #ffffff;
+  --line: #e2e6de;
+  --text: var(--ink);
+  --muted: #5a6b61;          /* NOTE: this is the muted TEXT color (mockups) */
+  --field: #eef1eb;
+  --shadow: 0 1px 2px rgba(11, 20, 16, 0.05), 0 8px 24px -12px rgba(11, 20, 16, 0.18);
+
+  --radius: 0.625rem; /* shadcn base radius (its components reference --radius*) */
+}
+
+/* Dark token block — applied via OS-dark (unless forced light) or forced dark.
+   The block is duplicated in both selectors below (CSS can't share it). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0a0f0c;
+    --card: #121a15;
+    --line: #23302a;
+    --text: #eaf2ec;
+    --muted: #8aa095;
+    --field: #1a241e;
+    --fairway: #1fa85a;
+    --flare: #ff6e3d;
+    --flare-soft: #3a1e12;
+    --chalk: #0a0f0c;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px -14px rgba(0, 0, 0, 0.6);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0a0f0c;
+  --card: #121a15;
+  --line: #23302a;
+  --text: #eaf2ec;
+  --muted: #8aa095;
+  --field: #1a241e;
+  --fairway: #1fa85a;
+  --flare: #ff6e3d;
+  --flare-soft: #3a1e12;
+  --chalk: #0a0f0c;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px -14px rgba(0, 0, 0, 0.6);
+}
+
+/* ----------------------------------------------------------------------------
+   shadcn/ui (base-nova) semantic tokens — DERIVED from the brand palette so
+   shadcn components are on-brand and theme-correct in both light and dark
+   without a separate `.dark` block.
+   -------------------------------------------------------------------------- */
+:root {
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card-foreground: var(--text);
+  --popover: var(--card);
+  --popover-foreground: var(--text);
+  --primary: var(--fairway);
+  --primary-foreground: #ffffff;
+  --secondary: var(--field);
+  --secondary-foreground: var(--text);
+  /* `muted` collides in name with our muted-text token; we keep --muted as the
+     text color, and point shadcn's muted-foreground at it too. shadcn surfaces
+     that use bg-muted render as that subtle tone (acceptable, rarely used). */
+  --muted-foreground: var(--muted);
+  --accent: var(--field);
+  --accent-foreground: var(--text);
+  --destructive: var(--down);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--flare);
+}
+
+/* ----------------------------------------------------------------------------
+   Map tokens into the Tailwind v4 theme. @theme inline keeps the var()
+   reference so utilities follow theme switches live.
+   -------------------------------------------------------------------------- */
+@theme inline {
+  /* Brand / surface utilities (bg-*, text-*, border-*) */
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-line: var(--line);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-field: var(--field);
+  --color-fairway: var(--fairway);
+  --color-fairway-deep: var(--fairway-deep);
+  --color-flare: var(--flare);
+  --color-flare-soft: var(--flare-soft);
+  --color-ink: var(--ink);
+  --color-chalk: var(--chalk);
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --color-carry: var(--carry);
+
+  /* shadcn semantic color utilities */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Type roles (§4) — fonts injected by next/font in layout.tsx */
+  --font-display: var(--font-saira-condensed); /* Saira Condensed: display, scores */
+  --font-label: var(--font-saira);             /* Saira: eyebrows, labels, captions */
+  --font-sans: var(--font-hanken);             /* Hanken Grotesk: body + UI text */
+
+  /* Radii scale (§4): sm 9 / md 13 / lg 16 / xl 20 */
+  --radius-sm: 9px;
+  --radius-md: 13px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  /* One elevation shadow token */
+  --shadow-card: var(--shadow);
+}
+
+/* ----------------------------------------------------------------------------
+   Base styles
+   -------------------------------------------------------------------------- */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-hanken), system-ui, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Accessibility — visible focus rings on keyboard nav (§4) */
+:focus-visible {
+  outline: 2px solid var(--flare);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Reusable type-role helpers pulled straight from the mockups */
+.font-display {
+  font-family: var(--font-saira-condensed), sans-serif;
+}
+.font-label {
+  font-family: var(--font-saira), sans-serif;
+}
+.eyebrow {
+  font-family: var(--font-saira), sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.num {
+  font-family: var(--font-saira-condensed), sans-serif;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* Respect reduced motion globally (§4) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

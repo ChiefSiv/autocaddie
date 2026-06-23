@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Autocaddie — Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800&family=Saira:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fairway:#0E6B3C;--flare:#FF5C24;--flare-soft:#FFE7DC;--ink:#0B1410;--chalk:#F6F7F3;
+  --up:#1FA85A;--down:#E0453C;--carry:#F2A33C;--bg:var(--chalk);--card:#FFFFFF;--line:#E2E6DE;
+  --text:var(--ink);--muted:#5A6B61;--field:#EEF1EB;--shadow:0 1px 2px rgba(11,20,16,.05),0 8px 24px -12px rgba(11,20,16,.18);
+}
+[data-theme="dark"]{
+  --bg:#0A0F0C;--card:#121A15;--line:#23302A;--text:#EAF2EC;--muted:#8AA095;--field:#1A241E;
+  --fairway:#1FA85A;--flare:#FF6E3D;--flare-soft:#3A1E12;--shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:"Hanken Grotesk",system-ui,sans-serif;-webkit-font-smoothing:antialiased;transition:background .3s,color .3s;padding-bottom:96px}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px}
+
+/* top greeting */
+.top{display:flex;align-items:center;justify-content:space-between;padding:22px 2px 8px}
+.top .hi .eyebrow{font-family:"Saira",sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.top .hi h1{font-family:"Saira Condensed",sans-serif;font-weight:800;text-transform:uppercase;font-size:30px;line-height:1;margin-top:2px}
+.hcap{display:flex;align-items:center;gap:10px}
+.hcap .v{text-align:right}
+.hcap .v .n{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:24px;line-height:1}
+.hcap .v .l{font-family:"Saira",sans-serif;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.hcap .v .t{font-size:10px;color:var(--up);font-weight:600}
+.avatar{width:42px;height:42px;border-radius:13px;background:var(--fairway);color:#fff;display:flex;align-items:center;justify-content:center;font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:18px}
+
+/* primary actions */
+.actions{display:flex;gap:10px;margin-top:12px}
+.start{flex:1;background:var(--flare);color:#fff;border:0;border-radius:18px;padding:20px;text-align:left;cursor:pointer;position:relative;overflow:hidden}
+.start .glow{position:absolute;right:-30px;top:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(255,255,255,.35),transparent 70%)}
+.start .lab{font-family:"Saira",sans-serif;font-size:10px;letter-spacing:.14em;text-transform:uppercase;opacity:.85;position:relative}
+.start .big{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:26px;text-transform:uppercase;line-height:1;margin-top:4px;position:relative}
+.join{flex:0 0 110px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px 16px;text-align:left;cursor:pointer;box-shadow:var(--shadow)}
+.join .lab{font-family:"Saira",sans-serif;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.join .big{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:22px;text-transform:uppercase;line-height:1;margin-top:4px}
+
+/* section */
+.sec{margin-top:24px}
+.sh{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+.sh .bar3{width:4px;height:15px;border-radius:3px;background:var(--flare)}
+.sh h2{font-family:"Saira Condensed",sans-serif;font-weight:700;text-transform:uppercase;font-size:16px;letter-spacing:.02em}
+.sh .live{margin-left:auto;display:flex;align-items:center;gap:6px;font-family:"Saira",sans-serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--up)}
+.sh .live .dot{width:7px;height:7px;border-radius:50%;background:var(--up);box-shadow:0 0 0 3px color-mix(in srgb,var(--up) 25%,transparent)}
+
+/* friends on course */
+.foc{background:var(--ink);color:#fff;border-radius:18px;padding:16px;position:relative;overflow:hidden}
+[data-theme="dark"] .foc{border:1px solid var(--line)}
+.foc .glow{position:absolute;left:-30px;bottom:-40px;width:140px;height:140px;background:radial-gradient(circle,var(--fairway),transparent 70%);opacity:.5}
+.foc .row{display:flex;align-items:center;gap:12px;position:relative}
+.foc .av{width:38px;height:38px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:16px;color:#fff;background:var(--flare)}
+.foc .who{flex:1}
+.foc .who b{font-weight:700}
+.foc .who small{display:block;font-size:11px;opacity:.7;margin-top:1px}
+.foc .follow{font-family:"Saira",sans-serif;font-weight:600;font-size:11px;letter-spacing:.05em;text-transform:uppercase;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);color:#fff;padding:8px 12px;border-radius:10px;cursor:pointer}
+
+/* regular games — one tap restart */
+.reg{display:flex;gap:10px;overflow-x:auto;padding-bottom:2px}
+.rcard{flex:0 0 auto;min-width:170px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:14px;cursor:pointer}
+.rcard .nm{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:18px;text-transform:uppercase}
+.rcard .meta{font-size:12px;color:var(--muted);margin-top:2px}
+.rcard .chips{display:flex;gap:5px;margin-top:10px}
+.rcard .ch{font-family:"Saira",sans-serif;font-weight:600;font-size:9px;letter-spacing:.05em;text-transform:uppercase;padding:3px 7px;border-radius:20px;background:var(--field);border:1px solid var(--line);color:var(--muted)}
+.rcard .ch.f{color:var(--fairway);border-color:color-mix(in srgb,var(--fairway) 30%,var(--line))}
+.rcard .play{margin-top:10px;font-family:"Saira",sans-serif;font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--flare)}
+
+/* recent round */
+.recent{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.recent .l .c{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:18px;text-transform:uppercase}
+.recent .l .s{font-size:12px;color:var(--muted);margin-top:2px}
+.recent .r{text-align:right}
+.recent .r .v{font-family:"Saira Condensed",sans-serif;font-weight:800;font-size:24px;line-height:1}
+.recent .r .v.up{color:var(--up)}
+.recent .r .tag{font-family:"Saira",sans-serif;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--up);margin-top:3px}
+
+/* bottom nav */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+.nav .inner{max-width:560px;margin:0 auto;display:flex;align-items:center;justify-content:space-around;padding:8px 8px 10px}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:0;cursor:pointer;color:var(--muted);font-family:"Saira",sans-serif;font-size:10px;letter-spacing:.06em;text-transform:uppercase;flex:1}
+.tab svg{width:22px;height:22px}
+.tab.on{color:var(--text)}
+.play{flex:0 0 auto;margin-top:-22px}
+.play .btn{width:60px;height:60px;border-radius:20px;background:var(--flare);color:#fff;border:0;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px -6px color-mix(in srgb,var(--flare) 60%,transparent);cursor:pointer}
+.play .btn svg{width:28px;height:28px}
+.play .cap{display:block;text-align:center;font-family:"Saira",sans-serif;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--flare);margin-top:4px;font-weight:600}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="hi">
+      <div class="eyebrow">Saturday morning</div>
+      <h1>Morning, Ryan</h1>
+    </div>
+    <div class="hcap">
+      <div class="v"><div class="n">8.2</div><div class="l">index</div><div class="t">▼ 0.3</div></div>
+      <div class="avatar">R</div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="start">
+      <span class="glow"></span>
+      <span class="lab">New</span>
+      <span class="big">Start a<br>round</span>
+    </button>
+    <button class="join">
+      <span class="lab">Have a code?</span>
+      <span class="big">Join</span>
+    </button>
+  </div>
+
+  <!-- FRIENDS ON COURSE (social hook) -->
+  <div class="sec">
+    <div class="sh"><span class="bar3"></span><h2>On the course now</h2><span class="live"><span class="dot"></span>Live</span></div>
+    <div class="foc">
+      <span class="glow"></span>
+      <div class="row">
+        <div class="av">M</div>
+        <div class="who"><b>Mac & 2 others</b><small>Hyde Park · thru 6 · Skins running</small></div>
+        <button class="follow">Follow</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REGULAR GAMES (one-tap restart) -->
+  <div class="sec">
+    <div class="sh"><span class="bar3"></span><h2>Your regular games</h2></div>
+    <div class="reg">
+      <div class="rcard">
+        <div class="nm">Saturday Crew</div>
+        <div class="meta">Ryan, Dewey, Mac, T.J.</div>
+        <div class="chips"><span class="ch f">Skins</span><span class="ch">Net</span><span class="ch">$5/hole</span></div>
+        <div class="play">▶ Start this</div>
+      </div>
+      <div class="rcard">
+        <div class="nm">Wed. League</div>
+        <div class="meta">Outing · 6 groups</div>
+        <div class="chips"><span class="ch f">Outing skins</span><span class="ch">Net</span></div>
+        <div class="play">▶ Start this</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECENT ROUND -->
+  <div class="sec">
+    <div class="sh"><span class="bar3"></span><h2>Last round</h2></div>
+    <div class="recent">
+      <div class="l">
+        <div class="c">Maketewah CC</div>
+        <div class="s">Sat · 76 (68 net) · Skins + Nassau</div>
+      </div>
+      <div class="r">
+        <div class="v up">+$24</div>
+        <div class="tag">✓ Settled</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="nav">
+  <div class="inner">
+    <button class="tab on">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>
+      Home
+    </button>
+    <button class="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M4 12h16M4 19h10"/></svg>
+      Rounds
+    </button>
+    <div class="play">
+      <button class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></button>
+      <span class="cap">Play</span>
+    </div>
+    <button class="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/><path d="M16 8a3 3 0 010 6M21 20c0-2-1.5-3.5-3.5-4.2"/></svg>
+      Friends
+    </button>
+    <button class="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+      You
+    </button>
+  </div>
+</nav>
+
+<script>
+if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+  document.documentElement.setAttribute('data-theme','dark');
+}
+</script>
+</body>
+</html>
