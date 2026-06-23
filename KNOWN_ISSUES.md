@@ -77,11 +77,21 @@ live in the scrolling pane.
   - **npm installs:** prefix `NODE_OPTIONS=--use-system-ca npm install …` (or
     `npx …`). Each registry request otherwise crawls ~70s on 3 failed retries.
   - **`next build` / `next dev`:** `next/font/google` fetches the three fonts at
-    build time and failed the same way. So the **`dev` and `build` scripts now
-    bake it in** via `cross-env`:
-    `cross-env NODE_OPTIONS=--use-system-ca next build --webpack`. Plain
-    `npm run build` / `npm run dev` now work with no manual prefix. (Harmless on
-    Vercel's Linux, whose system store includes the public CAs.)
+    build time and failed the same way.
+  - **`next start` (runtime):** the server makes outbound Supabase **Auth** calls
+    — the proxy's `getUser()` on each request and `/auth/callback`'s
+    `exchangeCodeForSession`. Server-side Node uses its *bundled* Mozilla CAs (not
+    the OS store), so these rejected the inspected cert with
+    `UNABLE_TO_VERIFY_LEAF_SIGNATURE` / `fetch failed` once a session existed —
+    **fatal** (500) before hardening. The browser's own calls succeed because the
+    browser trusts the OS store.
+
+    So **all three scripts bake in the flag** via `cross-env`, e.g.
+    `cross-env NODE_OPTIONS=--use-system-ca next start`. Plain `npm run dev`,
+    `npm run build`, and `npm start` now work with no manual prefix. (Harmless on
+    Vercel's Linux, whose system store includes the public CAs.) The proxy also
+    wraps `getUser()` in try/catch so any future transient outbound failure is
+    non-fatal (best-effort session refresh) rather than a 500.
   - **Zero-network alternative (not done):** self-host the fonts via
     `next/font/local` (commit the woff2 files) to drop the build-time fetch
     entirely. Revisit if CI/offline builds need it.

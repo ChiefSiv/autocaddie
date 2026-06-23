@@ -38,8 +38,15 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // Touch the user to trigger a token refresh when needed.
-  await supabase.auth.getUser();
+  // Touch the user to trigger a token refresh when needed. Best-effort: a
+  // transient outbound failure (e.g. network/TLS) must not 500 the page — the
+  // request proceeds with the existing cookies. (Runtime trusts the OS CA via
+  // `--use-system-ca` in the start script; see KNOWN_ISSUES.)
+  try {
+    await supabase.auth.getUser();
+  } catch {
+    /* keep serving — session just isn't refreshed this request */
+  }
 
   return response;
 }
