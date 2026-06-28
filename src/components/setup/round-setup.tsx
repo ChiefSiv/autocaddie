@@ -208,7 +208,7 @@ export function RoundSetup() {
     `${n >= 0 ? "+" : "−"}$${Math.abs(n).toFixed(0)}`;
 
   return (
-    <main className="flex flex-1 flex-col pb-28">
+    <main className="flex flex-1 flex-col pb-[calc(7rem+env(safe-area-inset-bottom))]">
       <div className="py-5">
         <p className="eyebrow">New round</p>
         <h1 className="font-display mt-0.5 text-3xl font-extrabold uppercase leading-none">
@@ -700,25 +700,34 @@ export function RoundSetup() {
         </div>
       </section>
 
-      {/* ── Start CTA ────────────────────────────────────────────────── */}
-      <div className="fixed inset-x-0 bottom-0 z-20 bg-gradient-to-t from-bg via-bg/90 to-transparent px-4 pb-4 pt-6">
-        <div className="mx-auto max-w-[560px]">
-          {problems.length > 0 && (
-            <p className="mb-2 text-center text-xs text-muted">{problems[0]}</p>
-          )}
-          {createRound.error && (
-            <p className="mb-2 text-center text-xs text-down">
-              {(createRound.error as Error).message}
-            </p>
-          )}
-          <Button
-            onClick={onStart}
-            disabled={!canStart}
-            className="font-label h-auto w-full rounded-xl bg-flare py-4 text-[15px] font-bold uppercase tracking-[0.08em] text-white"
-          >
-            {createRound.isPending ? "Starting…" : "Start round"}
-          </Button>
-        </div>
+      {/* ── Start CTA ──────────────────────────────────────────────────
+         Inline (NOT fixed): a fixed CTA sat at z-20 UNDER the z-30 BottomNav and
+         was invisible/unclickable. Inline keeps it in the scroll flow, always
+         reachable, and clear of the nav (main's bottom padding below). Disabled
+         until setup is valid AND the SI gate is satisfied (`needsStrokeIndex`
+         puts "Confirm stroke indexes." into `problems`, so it's already in
+         `canStart`; the hint just makes the blocker explicit). */}
+      <div className="mt-8">
+        {needsStrokeIndex && (
+          <p className="mb-2 text-center text-xs text-flare">
+            Confirm stroke indexes above before you can start scoring.
+          </p>
+        )}
+        {problems.length > 0 && !needsStrokeIndex && (
+          <p className="mb-2 text-center text-xs text-muted">{problems[0]}</p>
+        )}
+        {createRound.error && (
+          <p className="mb-2 text-center text-xs text-down">
+            {(createRound.error as Error).message}
+          </p>
+        )}
+        <Button
+          onClick={onStart}
+          disabled={!canStart}
+          className="font-label h-auto w-full rounded-xl bg-flare py-4 text-[15px] font-bold uppercase tracking-[0.08em] text-white disabled:opacity-50"
+        >
+          {createRound.isPending ? "Starting…" : "Start round"}
+        </Button>
       </div>
     </main>
   );

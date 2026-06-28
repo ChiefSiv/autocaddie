@@ -147,6 +147,18 @@ an anon client.
   `src/proxy.ts` exporting `proxy()`. (`src/lib/supabase/middleware.ts` keeps its
   name — it's just the `updateSession` helper, not the convention file.)
 
+## 🔭 Phase 2 follow-ups (queued, not yet fixed)
+
+- **Graywolf caches a DUPLICATE "White" tee.** Observed in the setup tee picker —
+  two "White" tees appear for the cached Graywolf course. Investigate the provider
+  response vs. the cache write: likely a dedup gap in the cache layer (the
+  `getOrCacheCourse`/`insertCourse` path in `src/lib/courses/cache.ts`) or the
+  GolfCourseAPI mapping emitting the tee twice (male/female grouping?). Fix with a
+  unique-on-(course_id, name[, gender]) guard or upsert, and de-dupe existing rows.
+- **Season-to-date zero state.** The per-player figure currently renders *nothing*
+  pre-settle (only shows when `!= 0`). Should show a clean "$0 with this crew"
+  zero state in the setup picker + settle-up so the number is legible from day one.
+
 ## 🧟 Stale prod service worker poisons `npm run dev` (looks like a code bug)
 
 **Symptom:** a runtime error from code that is correct on disk — we hit
