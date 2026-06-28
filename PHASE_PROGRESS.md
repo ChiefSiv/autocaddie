@@ -140,6 +140,67 @@ mandatory manual stroke-index entry; fix `SUPABASE_SERVICE_ROLE_KEY`.**
 
 ---
 
+## Phase 2 — Gameplay  (🔶 IN PROGRESS — engines-first)
+
+Build order: **engines GREEN before any UI**, then setup → play → recap → settle.
+
+### §2.5 durable schema verification (no migration needed)
+- ✅ Re-verified Phase 1's schema satisfies all four durable requirements:
+  durable `players` identity (managed/linked; `round_players.player_id` FK, **no
+  free-text names**), `events.crew_id` nullable (+ `ledger_entries.crew_id NOT
+  NULL` ⇒ crewless writes no ledger), crew-scoped `ledger_entries`, retained
+  `hole_scores`. **PASS — went straight to gameplay.**
+
+### Ledger idempotency  ✅ (additive migration)
+- ✅ `20260628120005_ledger_unique.sql`: `UNIQUE (event_id, player_id)` on
+  `ledger_entries`; settle upserts `ON CONFLICT DO UPDATE`. Paid-flag resets only
+  when the amount changed. Documented in CONTEXT.md. **Not yet `db push`ed** —
+  apply with the settle-write UI step.
+
+### Game engines  ✅ (pure + tested, GREEN)
+- ✅ `src/lib/games/`: `types.ts` (shared contract), `skins.ts`, `nassau.ts`,
+  `match.ts`, `settlement.ts` — all pure, money in integer cents.
+- ✅ **28 Vitest cases** vs hand-checked worked examples (62 total in the suite;
+  tsc clean):
+  - Skins: carryover+ante nets to 0; tie carries; pick-up can't win; **terminal
+    unclaimed pot voided & refunded** (Σ=0 mid-carry); carryover-off; stakes-off.
+  - Nassau: front/back/18 as three bets; tied segment halved; **9-hole single-bet
+    collapse**; pick-up = loss; stakes-off.
+  - Match Play: running status; "3 & 2" closeout; **dormie boundary (`>` not
+    `>=`)** → 2&1 / 3&1 / "1 up" to the last hole; **halved-18**; pick-up = loss.
+  - Settlement: **minimized < naive pairwise**; by-game sums to minimized;
+    3-player routing; fractional ($2.50) cents exact.
+
+### Round setup + stroke-index gate  ✅ (first cut)
+- ✅ `/play` round-setup flow (`src/components/setup/`, `src/lib/queries/`):
+  crew picker (+ new crew, **crewless one-off**), durable player roster picker +
+  **quick-add managed player** (never free-text), course picker (cached list +
+  near-exact provider search → cache-on-first-use), tee selector, holes 9/18 (+
+  which-nine), allowance toggle (full / low-man-scratch), games (Skins/Nassau/
+  Match) with Social↔Stakes, stake, carryover, and **side selection** for
+  match-based games. Season-to-date figure shown per player (empty until settle).
+- ✅ **MANDATORY stroke-index gate** (`stroke-index-gate.tsx`): when the chosen
+  tee has any null SI, a blocking step requires a complete 1..N permutation
+  (validated) and **Start round is disabled** until saved. Persists to
+  `holes.stroke_index`.
+- ✅ Create-round mutation (`rounds.ts`): event → group → round_players (engine-
+  computed course/playing handicaps, allowance mode applied) → games (sides
+  mapped player_id → round_player id). Status → `active`. Routes to round home.
+- ✅ Round home **first cut** (`/play/[eventId]`): join code, players with
+  course/strokes handicaps, games — confirms persistence; "Enter scores" stubbed.
+- ✅ tsc + eslint clean; `next build` green (14 routes); 63 tests.
+
+### Remaining (UI + persistence)  ⬜
+- ⬜ Round home full (single-game hero / 2+ swipe strip) + live standings.
+- ⬜ Hole-entry screen (all players, gross, stroke dots, pick-up, live standings).
+- ⬜ Two-pane scorecard (split panes, gross+net, tap-to-jump).
+- ⬜ Recap → settle-up (minimized + by-game toggle, mark-as-paid, end-early,
+  **writes LedgerEntry**, season-to-date figure).
+- ⬜ Local-first in-progress round (Dexie outbox); lock-after-hole-1;
+  recompute-on-edit.
+
+---
+
 ## Out of scope for Phases 0–1 (build prompt §11)
 🚫 Game-scoring engines · live hole-entry & scorecard UIs · realtime score sync ·
 settlement engine · multi-group outing UI · stats/records · GHIN · social feed.

@@ -1,0 +1,32 @@
+-- ============================================================================
+-- Autocaddie · Phase 2 — additive: ledger idempotency
+-- One ledger entry per (event, player). Makes re-settle and
+-- settle-after-end-early STRUCTURALLY unable to double-write: the settle write
+-- upserts ON CONFLICT (event_id, player_id) DO UPDATE.
+--
+-- Fail-loud idempotency, in the spirit of the handicap engine's throw-on-missing
+-- stroke index — we'd rather a constraint reject a bad second write than let
+-- season-to-date silently inflate.
+--
+-- Note on NULLs: event_id is nullable only because `on delete set null` orphans
+-- an entry when its event is deleted. At settle time event_id is always present,
+-- so the constraint binds every real write. (Postgres treats NULLs as distinct,
+-- so post-deletion orphans never collide — which is fine; they're historical.)
+--
+-- Paid-flag policy on re-settle (implemented in the settle write, documented in
+-- CONTEXT.md): reset `paid` to false IFF the amount changed, otherwise preserve
+-- it — a corrected number is a new debt to acknowledge; an unchanged one keeps
+-- its acknowledgement. The canonical upsert:
+--
+--   insert into public.ledger_entries (crew_id, event_id, player_id, amount)
+--   values (:crew_id, :event_id, :player_id, :amount)
+--   on conflict (event_id, player_id) do update
+--     set amount = excluded.amount,
+--         paid   = case when public.ledger_entries.amount
+--                            is distinct from excluded.amount
+--                       then false
+--                       else public.ledger_entries.paid end;
+-- ============================================================================
+
+alter table public.ledger_entries
+  add constraint ledger_entries_event_player_key unique (event_id, player_id);

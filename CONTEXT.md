@@ -5,11 +5,15 @@
 
 ## Status
 
-**Phases 0 and 1 complete.** Foundation (PWA, auth, theming), full schema +
-durable persistence + RLS (applied to Supabase), CourseDataProvider + cache,
-handicap/stroke engine, and the real Home + TanStack data layer are all built and
-verified. Phase 2 (gameplay) has **not** started — see
+**Phases 0 and 1 complete; Phase 2 (gameplay) in progress.** Foundation (PWA,
+auth, theming), full schema + durable persistence + RLS (applied to Supabase),
+CourseDataProvider + cache, handicap/stroke engine, and the real Home + TanStack
+data layer are all built and verified. **Phase 2 started engines-first:** the
+Skins / Nassau / Match Play game engines + the settlement engine are built as
+pure, tested functions (`src/lib/games/`), GREEN before any UI — see
 [claude-code-build-prompt-phase-2.md](claude-code-build-prompt-phase-2.md).
+**Round setup + the mandatory stroke-index gate are built** (`/play`); hole-entry
+→ recap → settle are next.
 
 **Open items to carry into Phase 2:**
 1. **Manual stroke-index entry is a MANDATORY core path.** Real courses (e.g.
@@ -277,11 +281,83 @@ from `supabase gen types typescript` after the migration is applied (regenerate
 whenever the schema changes) → `src/lib/supabase/database.types.ts`; the clients
 then use `createClient<Database>()`.
 
+### Game engines (Phase 2 — `src/lib/games/`)
+
+Pure, tested functions; **GREEN before any UI** (build prompt §6). Each engine
+consumes scores **already netted upstream** (gross − strokes received, via the
+handicap engine using the round's allowance mode) — engines see numbers only,
+`null` = pick-up. Each returns per-player signed `nets` that **sum to ~0** across
+participants (all 0 when stakes off) plus a typed `detail` for UI/recap. Shared
+contract + helpers in `types.ts` (`HoleScores`, `Side`, `Stakes`, `roundMoney`,
+`sideNetOnHole`). Money math runs in **integer cents** to avoid float drift.
+
+- **Skins** (`skins.ts`) — whole group; one skin/hole; carryovers on by default.
+  Lowest net wins outright; tie carries & grows the pot; pick-up can't win. Net
+  math: an awarded pot covering *k* holes is fed by exactly `stake × nPlayers × k`
+  of ante, so it nets to zero. **Terminal unclaimed pot rule (decided):** if the
+  round ends mid-carry, the dead pot is **voided and its antes refunded** (we only
+  charge ante for holes belonging to an *awarded* pot) → Σnet = 0 even mid-carry.
+  Carryover-off: a tie voids just that hole.
+- **Match Play** (`match.ts`) — 1v1 (sides), net, hole-by-hole. Pick-up = hole
+  loss; both pick up = halve. **Closeout is STRICT (`lead > remaining`)**: dormie
+  (`lead == remaining`, e.g. 2 up / 2 to play) stays **open**; being ahead on the
+  *final* hole (remaining 0) reads "X up", not "X & 0". Result strings: "3 & 2",
+  "2 up", "Halved". `compareHole` is shared with Nassau.
+- **Nassau** (`nassau.ts`) — two sides, net. 18 holes → **three independent bets**
+  (front 9 / back 9 / total 18), each the side that won more holes over the
+  segment (level = halved, no money). **9-hole round collapses to a single bet**
+  (`holesToPlay === 9`, no front/back/18 split). No presses (v1).
+- **Sides** can hold multiple players (best-ball: side's hole net = lowest among
+  its players; side's net split evenly). v1 UI picks single-player sides; the
+  aggregation is there so team formats drop in later without re-architecting.
+
+### Settlement engine (Phase 2 — `src/lib/games/settlement.ts`)
+
+Sums each game's per-player nets → one net per player, then **minimizes payments**
+(greedy largest-creditor vs largest-debtor; ≤ n−1 transactions; deterministic
+sort for stable output). `byGame` is a passthrough that, per player, sums to the
+same net as the minimized view (test-guarded). **Pure — it computes, it does not
+persist;** the caller writes the ledger. Cents throughout.
+
+**Ledger idempotency (decided; additive migration `…_ledger_unique`).**
+`ledger_entries` gets `UNIQUE (event_id, player_id)`; the settle write **upserts
+`ON CONFLICT (event_id, player_id) DO UPDATE`** so a re-settle or a
+settle-after-end-early **structurally cannot double-write** (no season-to-date
+inflation). **Paid-flag policy on re-settle:** reset `paid → false` **iff the
+amount changed**, else preserve it (a corrected debt must be re-acknowledged; an
+unchanged one keeps its acknowledgement). Fail-loud, matching the handicap
+engine's throw-on-missing-SI. The canonical upsert SQL lives in the migration.
+
+### Round setup + play UI (Phase 2 — `src/app/play/`, `src/components/setup/`)
+
+- **`/play`** = round setup (`RoundSetup`). Client data hooks in
+  `src/lib/queries/` (`crews.ts`, `courses.ts`, `rounds.ts`, extended
+  `events.ts`): crews + durable players (quick-add = managed `Player`, **never
+  free text**), cached-course list + near-exact provider search →
+  cache-on-first-use, and `useCreateRound` (event → group → round_players with
+  engine-computed handicaps → games; sides mapped player_id → round_player id;
+  status `active`).
+- **Stroke-index gate** (`stroke-index-gate.tsx`) is the enforced realization of
+  the mandatory-SI decision: rendered whenever the chosen tee has any null SI,
+  it blocks **Start round** until a complete 1..N permutation is saved to
+  `holes.stroke_index`. Mirrors `allocateStrokes`' throw-on-missing-SI at the UI.
+- **State pattern:** setup avoids `setState`-in-effect (lint rule
+  `react-hooks/set-state-in-effect`) by **deriving** defaults — `crewId` from
+  `crewChoice ?? crews[0]`, `teeSetId` from `teeChoice ?? tees[0]`, selected
+  players filtered against the live roster — rather than syncing via effects.
+- **`/play/[eventId]`** = round home (first cut): join code, players w/ course &
+  strokes handicaps, games. "Enter scores" stubbed until hole-entry lands.
+- **Deferred to later steps:** join code is shown post-create (not during setup —
+  multi-phone join is Phase 3); `RoundTemplate` prefill; the season figure is
+  wired but reads 0 until the settle step writes the ledger.
+
 ## Open assumptions / to revisit
 
-- Course provider verified: the builder confirmed **GolfCourseAPI returns
-  per-hole stroke index**; it's the primary provider, golfapi.io the fallback
-  behind the `CourseDataProvider` interface.
+- Course provider: GolfCourseAPI is primary (golfapi.io fallback, unverified).
+  Per-hole stroke index is **frequently absent** (verified: Graywolf returns none
+  on any tee) → flagged via `CachedCourse.needsStrokeIndex`. The confirm/enter-
+  stroke-index step at round setup is **mandatory**, not optional; `allocateStrokes`
+  throws until SI is complete.
 - **Course-data RLS is permissive** (any authenticated user may insert/update
   `courses`/`tee_sets`/`holes`) since it's a shared cache in a single-tenant
   personal app. Revisit (creator-scoped writes / service-role-only) if this ever

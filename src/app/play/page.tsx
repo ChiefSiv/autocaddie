@@ -1,17 +1,16 @@
-import { Flag } from "lucide-react";
-import { StubPage } from "@/components/ui/stub-page";
+import { AppHeader } from "@/components/nav/app-header";
+import { AuthGate } from "@/components/auth/auth-gate";
+import { RoundSetup } from "@/components/setup/round-setup";
 
-export const metadata = { title: "Play — Autocaddie" };
+export const metadata = { title: "Set up a round — Autocaddie" };
 
 export default function PlayPage() {
   return (
-    <StubPage
-      eyebrow="Start or join"
-      title="+ Play"
-      icon={<Flag className="size-8" aria-hidden />}
-    >
-      Round setup and join-by-code arrive in Phase 2 — start a round, pick a
-      course and tee, add players, and choose your games here.
-    </StubPage>
+    <>
+      <AppHeader />
+      <AuthGate>
+        <RoundSetup />
+      </AuthGate>
+    </>
   );
 }
