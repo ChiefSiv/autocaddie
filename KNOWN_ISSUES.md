@@ -147,6 +147,31 @@ an anon client.
   `src/proxy.ts` exporting `proxy()`. (`src/lib/supabase/middleware.ts` keeps its
   name — it's just the `updateSession` helper, not the convention file.)
 
+## 🧟 Stale prod service worker poisons `npm run dev` (looks like a code bug)
+
+**Symptom:** a runtime error from code that is correct on disk — we hit
+`queryKeys.crewPlayers is not a function` even though `keys.ts` clearly defines it
+(proven: `keys.test.ts` asserts it's callable; `tsc`/`build` green). Tell-tale: the
+error's stack line **doesn't match the committed source** (it pointed at
+`crews.ts:24`, a `}`, not the `crewPlayers` call at line 36). That mismatch means
+**the browser is executing bytes that aren't your current source.**
+
+**Cause:** the prod build emits a Serwist SW (`public/sw.js`). Once it registers on
+an origin (any `npm start` / prod visit on `localhost`), it **keeps controlling
+that origin and serving precached old chunks** — *surviving* `rm -rf .next` and a
+fresh `npm run dev`, because the SW sits in the browser, in front of the dev
+server. `next.config.ts` only **disables registering a new** SW in dev; it does
+**not unregister an already-active one**.
+
+**Immediate recovery (one-time):** DevTools → Application → Service Workers →
+**Unregister** (and "Clear site data"), then hard-reload. The stale SW serves an
+old app shell, so it must be removed manually once.
+
+**Recurrence guard (in code):** `SW_DEV_CLEANUP_SCRIPT` (injected by
+`layout.tsx` **only when `NODE_ENV !== 'production'`**) unregisters any active SW +
+clears caches and reloads once (sessionStorage-guarded). After the one-time manual
+clear, this keeps a leftover prod SW from poisoning dev again. Not emitted in prod.
+
 ## 📝 Notes
 
 - **Service worker is disabled in development** (`next.config.ts`). Test PWA

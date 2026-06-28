@@ -4,7 +4,10 @@ import "./globals.css";
 import { Providers } from "@/components/providers/providers";
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { THEME_INIT_SCRIPT } from "@/components/theme/theme-script";
+import { SW_DEV_CLEANUP_SCRIPT } from "@/components/dev/sw-dev-cleanup";
 import { cn } from "@/lib/utils";
+
+const isDev = process.env.NODE_ENV !== "production";
 
 // §4 type roles — exposed as CSS vars consumed by the Tailwind theme.
 const sairaCondensed = Saira_Condensed({
@@ -75,6 +78,10 @@ export default function RootLayout({
       <body className="min-h-full">
         {/* Apply saved/OS theme before paint to avoid a flash of the wrong theme. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        {/* DEV ONLY: tear down any stale prod service worker poisoning dev. */}
+        {isDev && (
+          <script dangerouslySetInnerHTML={{ __html: SW_DEV_CLEANUP_SCRIPT }} />
+        )}
         <Providers>
           {/* Mobile-first: content centered in a max-width column on larger screens. */}
           <div className="mx-auto flex min-h-dvh w-full max-w-[560px] flex-col px-4 pb-24">
