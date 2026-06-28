@@ -158,6 +158,24 @@ an anon client.
 - **Season-to-date zero state.** The per-player figure currently renders *nothing*
   pre-settle (only shows when `!= 0`). Should show a clean "$0 with this crew"
   zero state in the setup picker + settle-up so the number is legible from day one.
+- **Skins gross option not exposed.** Spec says Skins is "net default, gross
+  optional." Today the setup UI hard-codes every game to `gross_or_net: "net"` with
+  no toggle, so Skins is **net-locked** (Nassau/Match are correctly net-only). The
+  engines already take pre-netted scores, so "gross" just means feeding gross in;
+  add a Net/Gross toggle to the Skins card only. Accidental lock → deferred, not a
+  v1 decision.
+- **Side dropdowns — verified OK.** Nassau/Match side `<select>`s map over the
+  round's live `selectedPlayers`, so they show real chosen players, not stale
+  names. (Confirmed during the course/tee restructure; logged so it's not re-checked.)
+
+### Phase 3 backlog (do NOT build in Phase 2)
+- **User-settable default home course** in Settings (one place; the round-setup
+  course flow stays "unselected each round" per the corrected model).
+- **Persist entered stroke index to the cached course.** When a user enters SI for
+  a no-SI course (e.g. Graywolf), the `StrokeIndexGate` already writes it to
+  `holes.stroke_index` for that tee — but confirm/ensure it sticks per cached
+  course so it isn't re-entered every round. This is what makes a no-SI course
+  viable as a saved home course; design alongside the Settings default.
 
 ## 🧟 Stale prod service worker poisons `npm run dev` (looks like a code bug)
 

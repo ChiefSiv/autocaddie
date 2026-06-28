@@ -119,7 +119,6 @@ export function RoundSetup() {
   const [teeChoice, setTeeChoice] = useState<string | null>(null);
   const { data: courseDetail } = useCourseDetail(courseId);
   const teeSetId = teeChoice ?? courseDetail?.tees[0]?.id ?? null;
-  const [showSearch, setShowSearch] = useState(false);
   const [searchQ, setSearchQ] = useState("");
   const { data: searchResults, isFetching: searching } = useSearchCourses(searchQ);
   const cacheCourse = useCacheCourse();
@@ -275,108 +274,146 @@ export function RoundSetup() {
 
       {/* ── COURSE ───────────────────────────────────────────────────── */}
       <section className="mt-6">
-        <SectionHeader
-          title="Course"
-          action={
-            <button
-              type="button"
-              onClick={() => setShowSearch((s) => !s)}
-              className="font-label flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.06em] text-fairway"
-            >
-              <Search className="size-3.5" /> Find
-            </button>
-          }
-        />
-        {showSearch && (
-          <div className="mb-3 rounded-lg border border-line bg-card p-3 shadow-card">
-            <input
-              value={searchQ}
-              onChange={(e) => setSearchQ(e.target.value)}
-              placeholder="Search by exact name (e.g. Graywolf)"
-              className="w-full rounded-md border border-line bg-field px-3 py-2 text-sm outline-none focus:border-fairway"
-            />
+        <SectionHeader title="Course" />
+
+        {!courseId ? (
+          /* STEP 1 — pick EXACTLY ONE course (search + saved list). No course is
+             pre-selected; the user picks one each round. */
+          <div className="rounded-lg border border-line bg-card p-3 shadow-card">
+            <div className="flex items-center gap-2 rounded-md border border-line bg-field px-3 py-2">
+              <Search className="size-4 flex-none text-muted" aria-hidden />
+              <input
+                value={searchQ}
+                onChange={(e) => setSearchQ(e.target.value)}
+                placeholder="Find a course by exact name (e.g. Graywolf)"
+                className="w-full bg-transparent text-sm outline-none"
+              />
+            </div>
             <p className="mt-1.5 text-[11px] text-muted">
               Search is near-exact — try the precise spelling.
             </p>
-            <div className="mt-2 flex flex-col gap-1.5">
-              {searching && <div className="h-8 animate-pulse rounded bg-field" />}
-              {(searchResults ?? []).map((r) => (
-                <button
-                  key={`${r.provider}-${r.providerId}`}
-                  type="button"
-                  disabled={cacheCourse.isPending}
-                  onClick={async () => {
-                    const id = await cacheCourse.mutateAsync({
-                      providerId: r.providerId,
-                      provider: r.provider,
-                    });
-                    setCourseId(id);
-                    setTeeChoice(null);
-                    setShowSearch(false);
-                  }}
-                  className="rounded-md border border-line bg-field px-3 py-2 text-left text-sm"
-                >
-                  <span className="font-semibold">{r.name}</span>
-                  {r.city && <span className="text-muted"> · {r.city}{r.state ? `, ${r.state}` : ""}</span>}
-                </button>
-              ))}
-              {cacheCourse.error && (
-                <p className="text-xs text-down">{(cacheCourse.error as Error).message}</p>
+
+            {(searching || (searchResults && searchResults.length > 0)) && (
+              <div className="mt-2 flex flex-col gap-1.5">
+                {searching && <div className="h-8 animate-pulse rounded bg-field" />}
+                {(searchResults ?? []).map((r) => (
+                  <button
+                    key={`${r.provider}-${r.providerId}`}
+                    type="button"
+                    disabled={cacheCourse.isPending}
+                    onClick={async () => {
+                      const id = await cacheCourse.mutateAsync({
+                        providerId: r.providerId,
+                        provider: r.provider,
+                      });
+                      setCourseId(id);
+                      setTeeChoice(null);
+                      setSearchQ("");
+                    }}
+                    className="rounded-md border border-line bg-field px-3 py-2 text-left text-sm"
+                  >
+                    <span className="font-semibold">{r.name}</span>
+                    {r.city && (
+                      <span className="text-muted"> · {r.city}{r.state ? `, ${r.state}` : ""}</span>
+                    )}
+                  </button>
+                ))}
+                {cacheCourse.error && (
+                  <p className="text-xs text-down">{(cacheCourse.error as Error).message}</p>
+                )}
+              </div>
+            )}
+
+            <p className="font-label mb-1.5 mt-3 text-[10px] uppercase tracking-[0.1em] text-muted">
+              Saved courses
+            </p>
+            {(cachedCourses ?? []).length === 0 ? (
+              <p className="text-sm text-muted">None yet — search above to add one.</p>
+            ) : (
+              <div className="overflow-hidden rounded-md border border-line">
+                {(cachedCourses ?? []).map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => {
+                      setCourseId(c.id);
+                      setTeeChoice(null);
+                    }}
+                    className="flex w-full items-center justify-between border-b border-line px-3 py-2.5 text-left last:border-b-0"
+                  >
+                    <span className="font-display text-base font-extrabold uppercase">
+                      {c.name}
+                    </span>
+                    {c.city && (
+                      <span className="text-xs text-muted">
+                        {c.city}{c.state ? `, ${c.state}` : ""}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          /* STEP 2 — the CHOSEN course and ITS tees only (always attributed to
+             this course), then the inline SI step in the same flow. */
+          <div className="rounded-lg border border-line bg-card shadow-card">
+            <div className="flex items-center justify-between gap-3 border-b border-line p-4">
+              <div>
+                <div className="font-display text-xl font-extrabold uppercase">
+                  {courseDetail?.name ?? "Loading…"}
+                </div>
+                {courseDetail?.city && (
+                  <div className="text-xs text-muted">
+                    {courseDetail.city}{courseDetail.state ? `, ${courseDetail.state}` : ""}
+                  </div>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setCourseId(null);
+                  setTeeChoice(null);
+                }}
+                className="font-label flex-none text-xs font-semibold uppercase tracking-[0.06em] text-fairway"
+              >
+                Change
+              </button>
+            </div>
+
+            <div className="p-4">
+              <p className="font-label mb-2 text-[10px] uppercase tracking-[0.1em] text-muted">
+                Tees · {courseDetail?.name ?? ""}
+              </p>
+              {!courseDetail ? (
+                <div className="h-8 animate-pulse rounded bg-field" />
+              ) : courseDetail.tees.length === 0 ? (
+                <p className="text-sm text-muted">No tees cached for this course.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {courseDetail.tees.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setTeeChoice(t.id)}
+                      className={`font-label rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.05em] ${teeSetId === t.id ? "border-fairway bg-fairway text-white" : "border-line bg-card text-muted"}`}
+                    >
+                      {t.name}
+                      {t.rating && t.slope ? (
+                        <span className="ml-1.5 opacity-70">{t.rating}/{t.slope}</span>
+                      ) : null}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* MANDATORY stroke-index gate — inline, same flow, scoped to this tee */}
+              {tee && needsStrokeIndex && (
+                <div className="mt-3">
+                  <StrokeIndexGate courseId={courseId} tee={tee} onComplete={() => {}} />
+                </div>
               )}
             </div>
-          </div>
-        )}
-        <div className="overflow-hidden rounded-lg border border-line bg-card shadow-card">
-          {(cachedCourses ?? []).length === 0 && (
-            <p className="px-4 py-4 text-sm text-muted">
-              No saved courses yet — use Find above.
-            </p>
-          )}
-          {(cachedCourses ?? []).map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => {
-                setCourseId(c.id);
-                setTeeChoice(null);
-              }}
-              className={`flex w-full items-center justify-between border-b border-line px-4 py-3 text-left last:border-b-0 ${courseId === c.id ? "bg-field" : ""}`}
-            >
-              <span className="font-display text-lg font-extrabold uppercase">
-                {c.name}
-              </span>
-              {c.city && (
-                <span className="text-xs text-muted">
-                  {c.city}{c.state ? `, ${c.state}` : ""}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-
-        {/* Tee selector */}
-        {courseDetail && courseDetail.tees.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {courseDetail.tees.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setTeeChoice(t.id)}
-                className={`font-label rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.05em] ${teeSetId === t.id ? "border-fairway bg-fairway text-white" : "border-line bg-card text-muted"}`}
-              >
-                {t.name}
-                {t.rating && t.slope ? (
-                  <span className="ml-1.5 opacity-70">{t.rating}/{t.slope}</span>
-                ) : null}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* MANDATORY stroke-index gate */}
-        {tee && needsStrokeIndex && courseId && (
-          <div className="mt-3">
-            <StrokeIndexGate courseId={courseId} tee={tee} onComplete={() => {}} />
           </div>
         )}
       </section>
