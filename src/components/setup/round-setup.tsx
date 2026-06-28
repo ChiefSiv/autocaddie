@@ -129,8 +129,14 @@ export function RoundSetup() {
     [courseDetail, teeSetId],
   );
 
-  const needsStrokeIndex =
-    !!tee && (tee.holes.length === 0 || tee.holes.some((h) => h.strokeIndex == null));
+  // Stroke index must be PROVABLY complete for the chosen tee before scoring can
+  // start — allocateStrokes throws on any null SI (Phase-1 carry-forward gate).
+  // Fail SAFE: evaluate on the SELECTED course/tee, and treat anything we can't
+  // confirm as a full 1..N (no tee resolved yet, empty holes, or any null SI) as
+  // "needs stroke index" so Start can never slip through unexpanded.
+  const strokeIndexComplete =
+    !!tee && tee.holes.length > 0 && tee.holes.every((h) => h.strokeIndex != null);
+  const needsStrokeIndex = !!courseId && !strokeIndexComplete;
 
   // ── Round options ───────────────────────────────────────────────────────
   const [holesToPlay, setHolesToPlay] = useState<9 | 18>(18);
