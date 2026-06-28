@@ -79,10 +79,22 @@ persistence schema (built here since Phase 1 creates the schema).
   `createClient<Database>()`. Regenerate with `supabase gen types --db-url` once
   Docker is available.
 
-### Piece 2 — Course data  ⬜
-- ⬜ `CourseDataProvider` interface (GolfCourseAPI primary, golfapi.io fallback):
-  fetch + cache to Supabase; search by name + near-me; manual add/edit.
-- ⬜ Fixture course (hard-coded par + stroke index) for offline testing.
+### Piece 2 — Course data  ✅ (provider + cache verified live)
+- ✅ `CourseDataProvider` interface (`src/lib/courses/`): GolfCourseAPI primary
+  (tested), golfapi.io fallback (conforms to interface; UNVERIFIED — no key).
+  Factory selects via `COURSE_DATA_PROVIDER`.
+- ✅ Fetch + **cache-on-first-use** into `courses`/`tee_sets`/`holes`
+  (`getOrCacheCourse`), via the request's **authenticated** client (RLS allows
+  it; no service-role needed). Search by name (`/api/courses/search`), near-me
+  from cache (`/api/courses/nearby`), manual add/edit (`createManualCourse`).
+- ✅ Fixture course with full par + stroke index (`fixture.ts`).
+- ✅ Mapping unit-tested against **real saved Graywolf JSON** (10/10 tests).
+- ✅ Live integration verified (7/7): fetch Graywolf → cache → read back →
+  dup-rejected → cleanup, as an authenticated guest.
+- ⚠️ **Finding:** GolfCourseAPI returns slope/rating/par/yardage but **Graywolf
+  has NO per-hole stroke index on any tee** — the make-or-break field is often
+  missing. `needsStrokeIndex` flags this; confirm-at-setup + manual entry are
+  mandatory (Phase 2 UI). Search is near-exact.
 
 ### Piece 3 — Handicap engine  ⬜
 - ⬜ Course/playing handicap + stroke allocation as tested pure functions (§7).

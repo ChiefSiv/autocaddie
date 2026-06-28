@@ -51,6 +51,30 @@ live in the scrolling pane.
 - **Magic-link redirect:** `NEXT_PUBLIC_SITE_URL` must match the origin and be
   added to Supabase Auth → URL Configuration → Redirect URLs.
 
+## 🔑 Config: `SUPABASE_SERVICE_ROLE_KEY` is wrong in `.env.local`
+The value currently in `SUPABASE_SERVICE_ROLE_KEY` is actually the **anon key**
+(decoded role `anon`, identical to `NEXT_PUBLIC_SUPABASE_ANON_KEY`). The
+service-role admin client therefore does **not** bypass RLS. Course caching was
+refactored to use the authenticated client (so it doesn't need it), but **fix
+this** for any future RLS-bypass task: paste the real service-role secret from
+Supabase → Project Settings → API. Until then `createAdminClient()` behaves like
+an anon client.
+
+## ⛳ GolfCourseAPI: stroke index is often missing; search is near-exact
+- **Per-hole stroke index (`handicap`) is frequently absent.** Verified: Graywolf
+  (id 7028) returns slope/rating/par/yardage on all 5 tees but **no stroke index
+  on any hole**. We map missing SI → `null` and flag `needsStrokeIndex`. The
+  **confirm-stroke-index step and manual entry are mandatory** (Phase 2 setup),
+  not nice-to-haves. golfapi.io (fallback) may cover SI better — finish that
+  provider when a key is available.
+- **Search is near-exact / single-token:** "Graywolf" matches; "Gray Wolf" (space)
+  and even "Graywolf Golf" return 0. The search UI must hint at exact spelling and
+  offer **manual add** as a fallback.
+- **golfapi.io provider is UNVERIFIED** — coded to its v2.3 docs but untested (no
+  key). Primary path (GolfCourseAPI) is the tested one.
+- Search responses **trim holes** to `{par, yardage}` (no SI) — always call
+  `getCourse(id)` (cache-on-first-use) for the full tee/hole data.
+
 ## 📋 Phase 1 prerequisites / follow-ups
 
 - **Verify GolfCourseAPI coverage** of per-hole **stroke index + slope/rating**

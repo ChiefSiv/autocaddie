@@ -1,0 +1,471 @@
+{
+  "course": {
+    "id": 7028,
+    "club_name": "Graywolf Golf Club",
+    "course_name": "Graywolf Golf Club",
+    "location": {
+      "address": "1 Club Dr, Clayton, OH 45315, USA",
+      "city": "Clayton",
+      "state": "OH",
+      "country": "United States",
+      "latitude": 39.82831,
+      "longitude": -84.32381
+    },
+    "tees": {
+      "female": [
+        {
+          "tee_name": "White",
+          "course_rating": 75.1,
+          "slope_rating": 130,
+          "bogey_rating": 105.8,
+          "total_yards": 6152,
+          "total_meters": 5625,
+          "number_of_holes": 18,
+          "par_total": 72,
+          "front_course_rating": 36.6,
+          "front_slope_rating": 132,
+          "front_bogey_rating": 52.2,
+          "back_course_rating": 38.5,
+          "back_slope_rating": 128,
+          "back_bogey_rating": 53.6,
+          "holes": [
+            {
+              "par": 5,
+              "yardage": 453
+            },
+            {
+              "par": 4,
+              "yardage": 332
+            },
+            {
+              "par": 3,
+              "yardage": 161
+            },
+            {
+              "par": 4,
+              "yardage": 342
+            },
+            {
+              "par": 5,
+              "yardage": 455
+            },
+            {
+              "par": 4,
+              "yardage": 370
+            },
+            {
+              "par": 3,
+              "yardage": 143
+            },
+            {
+              "par": 4,
+              "yardage": 349
+            },
+            {
+              "par": 4,
+              "yardage": 382
+            },
+            {
+              "par": 4,
+              "yardage": 376
+            },
+            {
+              "par": 3,
+              "yardage": 158
+            },
+            {
+              "par": 4,
+              "yardage": 310
+            },
+            {
+              "par": 5,
+              "yardage": 526
+            },
+            {
+              "par": 4,
+              "yardage": 353
+            },
+            {
+              "par": 4,
+              "yardage": 398
+            },
+            {
+              "par": 4,
+              "yardage": 399
+            },
+            {
+              "par": 3,
+              "yardage": 118
+            },
+            {
+              "par": 5,
+              "yardage": 527
+            }
+          ]
+        },
+        {
+          "tee_name": "Green",
+          "course_rating": 68.8,
+          "slope_rating": 117,
+          "bogey_rating": 96.5,
+          "total_yards": 5033,
+          "total_meters": 4602,
+          "number_of_holes": 18,
+          "par_total": 72,
+          "front_course_rating": 33.7,
+          "front_slope_rating": 120,
+          "front_bogey_rating": 47.9,
+          "back_course_rating": 35.1,
+          "back_slope_rating": 114,
+          "back_bogey_rating": 48.6,
+          "holes": [
+            {
+              "par": 5,
+              "yardage": 429
+            },
+            {
+              "par": 4,
+              "yardage": 293
+            },
+            {
+              "par": 3,
+              "yardage": 126
+            },
+            {
+              "par": 4,
+              "yardage": 257
+            },
+            {
+              "par": 5,
+              "yardage": 409
+            },
+            {
+              "par": 4,
+              "yardage": 290
+            },
+            {
+              "par": 3,
+              "yardage": 90
+            },
+            {
+              "par": 4,
+              "yardage": 256
+            },
+            {
+              "par": 4,
+              "yardage": 325
+            },
+            {
+              "par": 4,
+              "yardage": 278
+            },
+            {
+              "par": 3,
+              "yardage": 139
+            },
+            {
+              "par": 4,
+              "yardage": 204
+            },
+            {
+              "par": 5,
+              "yardage": 419
+            },
+            {
+              "par": 4,
+              "yardage": 326
+            },
+            {
+              "par": 4,
+              "yardage": 336
+            },
+            {
+              "par": 4,
+              "yardage": 301
+            },
+            {
+              "par": 3,
+              "yardage": 101
+            },
+            {
+              "par": 5,
+              "yardage": 454
+            }
+          ]
+        }
+      ],
+      "male": [
+        {
+          "tee_name": "Gold",
+          "course_rating": 73.8,
+          "slope_rating": 135,
+          "bogey_rating": 98.8,
+          "total_yards": 7110,
+          "total_meters": 6501,
+          "number_of_holes": 18,
+          "par_total": 72,
+          "front_course_rating": 36.4,
+          "front_slope_rating": 130,
+          "front_bogey_rating": 48.5,
+          "back_course_rating": 37.4,
+          "back_slope_rating": 139,
+          "back_bogey_rating": 50.3,
+          "holes": [
+            {
+              "par": 5,
+              "yardage": 509
+            },
+            {
+              "par": 4,
+              "yardage": 372
+            },
+            {
+              "par": 3,
+              "yardage": 213
+            },
+            {
+              "par": 4,
+              "yardage": 396
+            },
+            {
+              "par": 5,
+              "yardage": 513
+            },
+            {
+              "par": 4,
+              "yardage": 431
+            },
+            {
+              "par": 3,
+              "yardage": 186
+            },
+            {
+              "par": 4,
+              "yardage": 394
+            },
+            {
+              "par": 4,
+              "yardage": 426
+            },
+            {
+              "par": 4,
+              "yardage": 424
+            },
+            {
+              "par": 3,
+              "yardage": 193
+            },
+            {
+              "par": 4,
+              "yardage": 365
+            },
+            {
+              "par": 5,
+              "yardage": 598
+            },
+            {
+              "par": 4,
+              "yardage": 395
+            },
+            {
+              "par": 4,
+              "yardage": 467
+            },
+            {
+              "par": 4,
+              "yardage": 456
+            },
+            {
+              "par": 3,
+              "yardage": 155
+            },
+            {
+              "par": 5,
+              "yardage": 617
+            }
+          ]
+        },
+        {
+          "tee_name": "Aqua",
+          "course_rating": 72.2,
+          "slope_rating": 131,
+          "bogey_rating": 96.5,
+          "total_yards": 6736,
+          "total_meters": 6159,
+          "number_of_holes": 18,
+          "par_total": 72,
+          "front_course_rating": 35.6,
+          "front_slope_rating": 127,
+          "front_bogey_rating": 47.4,
+          "back_course_rating": 36.6,
+          "back_slope_rating": 135,
+          "back_bogey_rating": 49.1,
+          "holes": [
+            {
+              "par": 5,
+              "yardage": 479
+            },
+            {
+              "par": 4,
+              "yardage": 357
+            },
+            {
+              "par": 3,
+              "yardage": 192
+            },
+            {
+              "par": 4,
+              "yardage": 378
+            },
+            {
+              "par": 5,
+              "yardage": 485
+            },
+            {
+              "par": 4,
+              "yardage": 417
+            },
+            {
+              "par": 3,
+              "yardage": 175
+            },
+            {
+              "par": 4,
+              "yardage": 369
+            },
+            {
+              "par": 4,
+              "yardage": 409
+            },
+            {
+              "par": 4,
+              "yardage": 408
+            },
+            {
+              "par": 3,
+              "yardage": 176
+            },
+            {
+              "par": 4,
+              "yardage": 340
+            },
+            {
+              "par": 5,
+              "yardage": 576
+            },
+            {
+              "par": 4,
+              "yardage": 375
+            },
+            {
+              "par": 4,
+              "yardage": 440
+            },
+            {
+              "par": 4,
+              "yardage": 445
+            },
+            {
+              "par": 3,
+              "yardage": 133
+            },
+            {
+              "par": 5,
+              "yardage": 582
+            }
+          ]
+        },
+        {
+          "tee_name": "White",
+          "course_rating": 69.2,
+          "slope_rating": 126,
+          "bogey_rating": 92.6,
+          "total_yards": 6152,
+          "total_meters": 5625,
+          "number_of_holes": 18,
+          "par_total": 72,
+          "front_course_rating": 34.2,
+          "front_slope_rating": 123,
+          "front_bogey_rating": 45.6,
+          "back_course_rating": 35,
+          "back_slope_rating": 129,
+          "back_bogey_rating": 47,
+          "holes": [
+            {
+              "par": 5,
+              "yardage": 453
+            },
+            {
+              "par": 4,
+              "yardage": 332
+            },
+            {
+              "par": 3,
+              "yardage": 161
+            },
+            {
+              "par": 4,
+              "yardage": 342
+            },
+            {
+              "par": 5,
+              "yardage": 455
+            },
+            {
+              "par": 4,
+              "yardage": 370
+            },
+            {
+              "par": 3,
+              "yardage": 143
+            },
+            {
+              "par": 4,
+              "yardage": 349
+            },
+            {
+              "par": 4,
+              "yardage": 382
+            },
+            {
+              "par": 4,
+              "yardage": 376
+            },
+            {
+              "par": 3,
+              "yardage": 158
+            },
+            {
+              "par": 4,
+              "yardage": 310
+            },
+            {
+              "par": 5,
+              "yardage": 526
+            },
+            {
+              "par": 4,
+              "yardage": 353
+            },
+            {
+              "par": 4,
+              "yardage": 398
+            },
+            {
+              "par": 4,
+              "yardage": 399
+            },
+            {
+              "par": 3,
+              "yardage": 118
+            },
+            {
+              "par": 5,
+              "yardage": 527
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

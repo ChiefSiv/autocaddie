@@ -199,6 +199,37 @@ Two scopes, both honoring "never gate play on an account; never world-readable":
 - `profiles` are self-only; a profile row is auto-created by trigger on every new
   `auth.users` row (accounts + anonymous).
 
+### Course data (Phase 1 Piece 2 — `src/lib/courses/`)
+
+- **Provider interface** (`types.ts`): `searchCourses(query)` + `getCourse(id)`,
+  returning normalized shapes. Two implementations behind it:
+  `providers/golfcourseapi.ts` (**primary, tested**) and `providers/golfapi.ts`
+  (**fallback, UNVERIFIED** — implemented to golfapi.io v2.3 docs but no key to
+  test). `provider.ts` selects via `COURSE_DATA_PROVIDER` (server-only; keys
+  never reach the client).
+- **Cache-on-first-use** (`cache.ts`): `getOrCacheCourse(db, providerId)` fetches
+  via the provider and persists into `courses`/`tee_sets`/`holes`, then reads
+  from the DB thereafter. **Writes use the request's authenticated client** (the
+  course-data RLS allows authenticated writes) — *not* the service role; least
+  privilege. `searchNearbyCachedCourses(db, lat, lng)` does "near me" over cached
+  coords (provider search is name-only). `createManualCourse(db, …)` is the
+  manual add/edit fallback (provider `"manual"`).
+- **API routes** (`src/app/api/courses/`): `search?q=`, `[providerId]` (cache),
+  `nearby?lat=&lng=` — each requires a session; provider key stays server-side.
+- **GolfCourseAPI specifics:** auth `Authorization: Key <COURSE_API_KEY>`;
+  `GET /v1/search?search_query=` (holes trimmed to par/yardage — **no SI**),
+  `GET /v1/courses/<id>` (full tees, grouped `male`/`female`). **Search is
+  near-exact** ("Graywolf" hits; "Gray Wolf"/"Graywolf Golf" do not) → the UI
+  must hint + offer manual add.
+- **Stroke-index reality (important):** per-hole `handicap` (stroke index) is
+  *frequently absent* — verified: Graywolf (7028) has none on any of its 5 tees,
+  though slope/rating/par/yardage are all present. We map missing SI → `null` and
+  set `CachedCourse.needsStrokeIndex`. The **confirm-stroke-index step + manual
+  entry are mandatory**, not optional. golfapi.io may have better SI coverage —
+  reason to finish that fallback when a key is available.
+- **Fixture course** (`fixture.ts`): "Autocaddie Test Links", par 72 with a full
+  1..18 SI permutation — for engine tests + offline.
+
 ### Applying & types
 
 Apply via `supabase db push` (atomic, tracked) after `supabase link`, or paste
