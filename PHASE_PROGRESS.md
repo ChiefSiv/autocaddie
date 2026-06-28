@@ -55,11 +55,28 @@ PWA install + airplane-mode shell on a device against a production build.**
 
 ---
 
-## Phase 1 — Schema + course data + handicap engine  (IN PROGRESS)
+## Phase 1 — Schema + course data + handicap engine  (✅ COMPLETE)
 
-Working the four pieces in order, pausing to verify between each:
-**schema → course data → handicap engine → Home.** Folds in the §2.5 durable-
+Worked the four pieces in order, verifying between each:
+**schema → course data → handicap engine → Home.** Folded in the §2.5 durable-
 persistence schema (built here since Phase 1 creates the schema).
+
+**Completion report vs §10 acceptance:**
+- Schema with Event→Group→Player + `Game.scope` + durable §2.5 entities, applied
+  to Supabase; RLS event-scoped + crew-scoped, **13/13 guest-boundary checks**.
+- `CourseDataProvider` (GolfCourseAPI primary, golfapi.io fallback) with
+  fetch + cache to Supabase, search + near-me + manual add/edit; **live-verified**
+  against Graywolf (real course cached). Finding: stroke index often absent →
+  confirm/manual is mandatory (Phase 2).
+- Handicap/stroke engine as tested pure functions (course/playing handicap,
+  allocation, full + relative allowance); **24 engine cases vs worked examples**.
+- Home renders in the design system (light + dark) wired to the TanStack data
+  layer. `next build` green; 34 tests; typecheck + lint clean.
+- ✅ By-hand check (builder, in browser): guest → set index → Home shows it;
+  empty states + light/dark confirmed.
+
+**→ Next handoff: Phase 2 (gameplay) in a fresh chat. Carry-forwards above:
+mandatory manual stroke-index entry; fix `SUPABASE_SERVICE_ROLE_KEY`.**
 
 ### Piece 1 — Schema + RLS  ✅ (applied & RLS-verified on the live DB)
 - ✅ Full Event→Group→Player + `Game.scope`, plus durable §2.5 entities (`crews`,
@@ -107,9 +124,19 @@ persistence schema (built here since Phase 1 creates the schema).
 - ✅ **23 Vitest cases**, hand-worked against real Graywolf Gold numbers + the
   fixture stroke indexes (33 tests total across the suite).
 
-### Piece 4 — Home + data layer  ⬜
-- ⬜ TanStack Query data layer (typed hooks for entities).
-- ⬜ Real Home per `golf-games-home.html`.
+### Piece 4 — Home + data layer  ✅
+- ✅ TanStack Query data layer (`src/lib/queries/`): typed hooks `useProfile` +
+  `useUpdateProfile`, `useRoundTemplates`, `useRecentEvents` (course embed), with
+  a shared key factory. Pattern established for the rest of the entities.
+- ✅ Real Home (`src/app/page.tsx`) per `golf-games-home.html`: greeting +
+  handicap index (tap → You), Start/Join, regular-games one-tap cards (or
+  invitation), friends-on-course placeholder, last-round card (or invitation);
+  skeletons while loading.
+- ✅ You → **Handicap** editor (`useUpdateProfile`) — the onboarding "one useful
+  question"; makes the Home index real data.
+- ✅ Live-verified (5/5) as a guest: profile auto-created, handicap save/read-back,
+  empty templates + events drive the empty states, course-embed shape valid.
+- ✅ `next build` green (all routes incl. `/api/courses/*`); 34 tests; lint clean.
 
 ---
 

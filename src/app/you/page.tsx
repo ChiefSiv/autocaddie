@@ -2,19 +2,31 @@
 
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { LogOut, UserRound } from "lucide-react";
+import { Check, LogOut, UserRound } from "lucide-react";
 import { AppHeader } from "@/components/nav/app-header";
 import { AuthGate } from "@/components/auth/auth-gate";
 import { SectionHeader } from "@/components/ui/section";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { createClient } from "@/lib/supabase/client";
 import { useUser, isGuest } from "@/lib/auth/use-user";
+import { useProfile, useUpdateProfile } from "@/lib/queries/profiles";
 
 function YouContent() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: user } = useUser();
+  const { data: profile } = useProfile();
+  const updateProfile = useUpdateProfile();
   const guest = isGuest(user);
+
+  function saveIndex(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const raw = new FormData(e.currentTarget).get("index");
+    const value = raw === "" || raw == null ? null : Number(raw);
+    updateProfile.mutate({
+      handicap_index: value != null && Number.isFinite(value) ? value : null,
+    });
+  }
 
   async function signOut() {
     const supabase = createClient();
@@ -41,6 +53,50 @@ function YouContent() {
       </div>
 
       <section className="mt-4">
+        <SectionHeader title="Handicap" />
+        <form
+          onSubmit={saveIndex}
+          className="rounded-lg border border-line bg-card p-4 shadow-card"
+        >
+          <label
+            htmlFor="index"
+            className="font-label text-[11px] uppercase tracking-[0.12em] text-muted"
+          >
+            Handicap index
+          </label>
+          <div className="mt-2 flex items-center gap-2.5">
+            <input
+              id="index"
+              name="index"
+              type="number"
+              step="0.1"
+              min="-10"
+              max="54"
+              inputMode="decimal"
+              placeholder="e.g. 8.2"
+              // key re-seeds the uncontrolled default once the profile loads
+              key={`idx-${profile?.id ?? "anon"}-${profile?.handicap_index ?? ""}`}
+              defaultValue={profile?.handicap_index ?? ""}
+              className="font-display w-28 rounded-md border border-line bg-field px-3 py-2.5 text-2xl font-extrabold tabular-nums outline-none"
+            />
+            <button
+              type="submit"
+              disabled={updateProfile.isPending}
+              className="font-label flex items-center gap-1.5 rounded-md bg-fairway px-4 py-2.5 text-sm font-bold uppercase tracking-[0.06em] text-white transition active:translate-y-px disabled:opacity-70"
+            >
+              {updateProfile.isSuccess && !updateProfile.isPending && (
+                <Check className="size-4" aria-hidden />
+              )}
+              Save
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-muted">
+            Drives the strokes you get. Manual now; GHIN later.
+          </p>
+        </form>
+      </section>
+
+      <section className="mt-6">
         <SectionHeader title="Settings" />
         <div className="flex items-center justify-between rounded-lg border border-line bg-card p-4 shadow-card">
           <div>

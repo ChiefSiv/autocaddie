@@ -3,6 +3,24 @@
 > Living architecture doc. Update this as part of every change, not after.
 > Companion docs: [KNOWN_ISSUES.md](KNOWN_ISSUES.md), [PHASE_PROGRESS.md](PHASE_PROGRESS.md).
 
+## Status
+
+**Phases 0 and 1 complete.** Foundation (PWA, auth, theming), full schema +
+durable persistence + RLS (applied to Supabase), CourseDataProvider + cache,
+handicap/stroke engine, and the real Home + TanStack data layer are all built and
+verified. Phase 2 (gameplay) has **not** started — see
+[claude-code-build-prompt-phase-2.md](claude-code-build-prompt-phase-2.md).
+
+**Open items to carry into Phase 2:**
+1. **Manual stroke-index entry is a MANDATORY core path.** Real courses (e.g.
+   Graywolf) return empty per-hole stroke indexes from GolfCourseAPI, so
+   round-setup must let the scorekeeper confirm/enter SI before scoring;
+   `allocateStrokes` throws until SI is complete (gate with
+   `holesMissingStrokeIndex` / `CachedCourse.needsStrokeIndex`).
+2. **`SUPABASE_SERVICE_ROLE_KEY` in `.env.local` is currently the anon key** —
+   replace with the real service-role secret for any RLS-bypass task. Course
+   caching deliberately uses the authenticated client, so nothing is blocked.
+
 ## What this is
 
 A real-time, **offline-capable PWA** where golfers play games against each other
