@@ -96,9 +96,16 @@ persistence schema (built here since Phase 1 creates the schema).
   missing. `needsStrokeIndex` flags this; confirm-at-setup + manual entry are
   mandatory (Phase 2 UI). Search is near-exact.
 
-### Piece 3 — Handicap engine  ⬜
-- ⬜ Course/playing handicap + stroke allocation as tested pure functions (§7).
-- ⬜ Full + relative allowance (relative = full − constant, one engine). Vitest.
+### Piece 3 — Handicap engine  ✅ (pure + tested)
+- ✅ `src/lib/handicap/engine.ts`: `courseHandicap`, `playingHandicap`,
+  `strokesOnHole`/`allocateStrokes` (SI 1 = hardest; handles N>18 and plus
+  handicaps; sums to the handicap), `netScore` (null = pick-up),
+  `computeRoundHandicaps` (field, end-to-end).
+- ✅ Full + relative allowance: `applyAllowanceMode` — relative = full handicap
+  **minus a constant** (the field's lowest playing handicap → low man scratch).
+  One engine, a thin adjustment; game-format allowance (0.85/0.95) is separate.
+- ✅ **23 Vitest cases**, hand-worked against real Graywolf Gold numbers + the
+  fixture stroke indexes (33 tests total across the suite).
 
 ### Piece 4 — Home + data layer  ⬜
 - ⬜ TanStack Query data layer (typed hooks for entities).

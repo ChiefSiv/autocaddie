@@ -75,11 +75,21 @@ an anon client.
 - Search responses **trim holes** to `{par, yardage}` (no SI) — always call
   `getCourse(id)` (cache-on-first-use) for the full tee/hole data.
 
+## ➡️ Phase 2 carry-forward (decided)
+
+- **Manual stroke-index entry is a MANDATORY core path, not optional.** Real
+  courses (e.g. Graywolf) come back with empty stroke indexes from GolfCourseAPI,
+  so Phase 2 round-setup must let the scorekeeper enter/confirm per-hole SI before
+  net scoring — treat it as a first-class step, gated on `needsStrokeIndex`. The
+  `createManualCourse` helper + the `holes.stroke_index` column already support it.
+- Graywolf (provider `golfcourseapi`, external_id `7028`) is **left cached** in
+  the DB as a convenience test course (5 tees; SI null → exercises the manual path).
+
 ## 📋 Phase 1 prerequisites / follow-ups
 
-- **Verify GolfCourseAPI coverage** of per-hole **stroke index + slope/rating**
-  for real target courses before relying on it; fall back to golfapi.io or manual
-  entry where thin. (Make-or-break field.)
+- ✅ **GolfCourseAPI coverage verified** for a real course (Graywolf): slope /
+  rating / par / yardage present; **stroke index absent** → manual entry path
+  (above). Fall back to golfapi.io or manual where thin.
 - Generate real PNG app icons from the SVG (see Phase 0 note below).
 - Wire the real Home (handicap index + trend, regular games, recent round) to
   live data per `golf-games-home.html`.

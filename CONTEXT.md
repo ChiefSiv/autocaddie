@@ -230,6 +230,27 @@ Two scopes, both honoring "never gate play on an account; never world-readable":
 - **Fixture course** (`fixture.ts`): "Autocaddie Test Links", par 72 with a full
   1..18 SI permutation — for engine tests + offline.
 
+### Handicap engine (Phase 1 Piece 3 — `src/lib/handicap/engine.ts`)
+
+Pure, tested functions (the math spine; stroke-dot UI comes later):
+- `courseHandicap({index, slope, rating, par})` = round(index×slope/113 +
+  (rating−par)). `playingHandicap(courseHcp, allowance=1)` applies the per-game
+  format allowance.
+- `strokesOnHole(handicap, strokeIndex)` / `allocateStrokes(handicap, holes)` —
+  SI 1 = hardest; one formula covers N≤18, N>18 (a 2nd stroke on SI≤N−18), and
+  **plus handicaps** (strokes given back on the easiest holes). Allocated strokes
+  always sum to the handicap. **`allocateStrokes` THROWS if any hole's SI is
+  null** (naming the gap) rather than silently mis-/under-allocating — SI is
+  course data finalized at setup; gate with `holesMissingStrokeIndex()` first.
+- **Order of operations:** per-game format allowance first (`playingHandicap`),
+  then round-level relative (`applyAllowanceMode` subtracts the field min).
+- `netScore(gross, strokes)` — null gross (pick-up) → null.
+- **Allowance mode is round-level** (`events.allowance_mode`): `applyAllowanceMode`
+  implements `relative` ("low man plays scratch") as **full handicap minus a
+  constant** (the field's lowest playing handicap) — one engine, a thin
+  adjustment, not a separate path. `full` is identity. `computeRoundHandicaps`
+  ties it together for a field.
+
 ### Applying & types
 
 Apply via `supabase db push` (atomic, tracked) after `supabase link`, or paste
