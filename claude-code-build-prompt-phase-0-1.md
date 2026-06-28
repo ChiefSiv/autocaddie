@@ -229,10 +229,17 @@ Notes to honor:
 Implement as well-tested pure functions; surface stroke dots in the UI later.
 
 - **Course Handicap** = `round( index × (slope / 113) + (courseRating − par) )`
-- **Playing Handicap** = `round( courseHandicap × allowance )`. Allowances are configurable
-  per game: singles match 100%, four-ball 85% (stroke) / 90% (match), Stableford/individual
-  95%. Also support a **relative** option (low player to scratch, others get the difference)
-  for casual games.
+- **Playing Handicap** = `round( courseHandicap × allowance )`. Two allowance **modes**, set
+  as a **round-level setting**:
+  - **Full handicap (default):** each player plays their own course handicap. Percentage
+    allowances apply per format where relevant (singles match 100%, four-ball 85% stroke /
+    90% match, Stableford/individual 95%).
+  - **Relative / "low man plays scratch" (toggle):** subtract the lowest player's course
+    handicap from everyone, so the low player is scratch and the rest get the difference.
+    Mathematically it's full handicap minus a constant — implement as a thin adjustment on
+    the same engine, not a separate path. Common in casual money games.
+  Default to full handicap so newcomers get the sensible standard; groups pick "relative"
+  once and it persists via saved round templates.
 - **Stroke allocation by stroke index** (SI 1 = hardest): a player on playing handicap `N`
   gets 1 stroke on each hole with `SI ≤ N`; if `N > 18`, every hole gets 1 plus a 2nd on
   `SI ≤ (N − 18)`. **Net hole score = gross − strokes received that hole.**

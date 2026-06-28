@@ -55,15 +55,42 @@ PWA install + airplane-mode shell on a device against a production build.**
 
 ---
 
-## Phase 1 — Schema + course data + handicap engine  (NOT STARTED)
+## Phase 1 — Schema + course data + handicap engine  (IN PROGRESS)
 
-- ⬜ Full §6 schema migrated to Supabase with RLS; generated types.
-- ⬜ TanStack Query data layer (typed hooks for entities).
+Working the four pieces in order, pausing to verify between each:
+**schema → course data → handicap engine → Home.** Folds in the §2.5 durable-
+persistence schema (built here since Phase 1 creates the schema).
+
+### Piece 1 — Schema + RLS  ✅ (applied & RLS-verified on the live DB)
+- ✅ Full Event→Group→Player + `Game.scope`, plus durable §2.5 entities (`crews`,
+  durable `players` managed/linked, `events.crew_id`, retained `hole_scores`,
+  `ledger_entries`) — `supabase/migrations/` (4 files).
+- ✅ Event-scoped + crew-scoped RLS; `join_event_by_code` RPC; guest (anon) play
+  preserved. Decisions recorded in CONTEXT.md.
+- ✅ **Applied to Supabase** via `supabase db push` (migrations 0001–0004 recorded
+  remotely). Fix migration 0004: `events_select` needed an immediate
+  `host_user_id` branch (AFTER-INSERT membership trigger isn't visible at
+  `RETURNING` time).
+- ✅ **RLS guest-boundary check: 13/13 pass** — two anonymous sessions; a guest
+  can create crew/player/event, cannot read another guest's crew/player/event,
+  can join by code and then read the event (but still not the crew roster).
+- ✅ Types: `database.types.ts` hand-authored from the migrations (CLI `gen types`
+  needs Docker/management-API, both unavailable here); clients use
+  `createClient<Database>()`. Regenerate with `supabase gen types --db-url` once
+  Docker is available.
+
+### Piece 2 — Course data  ⬜
 - ⬜ `CourseDataProvider` interface (GolfCourseAPI primary, golfapi.io fallback):
   fetch + cache to Supabase; search by name + near-me; manual add/edit.
-- ⬜ Handicap/stroke engine (§7) as tested pure functions (Vitest).
-- ⬜ Build the real Home per `golf-games-home.html`.
 - ⬜ Fixture course (hard-coded par + stroke index) for offline testing.
+
+### Piece 3 — Handicap engine  ⬜
+- ⬜ Course/playing handicap + stroke allocation as tested pure functions (§7).
+- ⬜ Full + relative allowance (relative = full − constant, one engine). Vitest.
+
+### Piece 4 — Home + data layer  ⬜
+- ⬜ TanStack Query data layer (typed hooks for entities).
+- ⬜ Real Home per `golf-games-home.html`.
 
 ---
 

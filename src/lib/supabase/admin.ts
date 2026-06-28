@@ -1,6 +1,7 @@
 import "server-only";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { serverEnv } from "@/lib/env";
+import type { Database } from "./database.types";
 
 /**
  * Service-role Supabase client — BYPASSES RLS. Server-only (the `server-only`
@@ -10,7 +11,11 @@ import { serverEnv } from "@/lib/env";
  */
 export function createAdminClient() {
   const env = serverEnv();
-  return createSupabaseClient(env.supabaseUrl, env.supabaseServiceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  return createSupabaseClient<Database>(
+    env.supabaseUrl,
+    env.supabaseServiceRoleKey,
+    {
+      auth: { persistSession: false, autoRefreshToken: false },
+    },
+  );
 }

@@ -125,19 +125,95 @@ scripts/gen-icons.mjs    # rasterizes SVG -> PNG app icons (npm run gen:icons)
 1. Unauthenticated visit → `AuthGate` redirects to `/signin`.
 2. `/signin`: **Start playing** = `signInAnonymously()` (guest); **email** =
    `signInWithOtp` magic link → `/auth/callback` exchanges the code.
-3. `middleware.ts` refreshes the session cookie on each request. Nothing gates
-   *playing* — a guest session is enough.
+3. `proxy.ts` (`updateSession`) refreshes the session cookie on each request.
+   Nothing gates *playing* — a guest session is enough.
 
-## Data model (planned — built in Phase 1)
+## Data model (Phase 1 — `supabase/migrations/`)
 
-Full Event → Group → Player schema with RLS, per build prompt §6. Not yet
-migrated. **Access/RLS rule:** scope every policy to the Event — accounts via
-`auth.uid()`, guests via the Event's `join_code` / round-scoped token. Never
-gate play on an account; never leave round data world-readable. Exact policies
-will be documented here when written.
+The schema is three ordered migrations: `…_identity_crews`, `…_course_data`,
+`…_events_play_ledger`. It implements build-prompt §6 **plus** the durable-
+persistence model from Phase 2 build prompt §2.5 (folded into Phase 1, since
+Phase 1 is where the schema is created).
+
+**Entities**
+
+- Identity / durable: `profiles` (1:1 with `auth.users`, accounts + anon guests),
+  `crews`, `crew_members`, `players` (durable, managed-vs-linked), `friendships`,
+  `round_templates`.
+- Course cache: `courses`, `tee_sets`, `holes` (par + per-hole stroke index +
+  slope/rating; cache-on-first-use).
+- Event / play: `events` (a round; `crew_id` nullable), `event_members` (access
+  control), `groups` (tee group within an event), `teams`, `round_players`
+  (→ durable `player_id`), `games`, `hole_scores` (one row per player/hole;
+  `strokes` nullable = pick-up; retained), `game_results`, `settlements`,
+  `ledger_entries` (durable, crew-scoped).
+
+### Durable-persistence decisions (cross-phase — §2.5; do not regress)
+
+1. **Durable Player identity, never free text.** `players` is a persistent
+   identity that accrues a record. A managed player has `linked_user_id = null`
+   (no login; you score for them; can link to a real account later); a linked
+   player points at an `auth.users` id. Quick-add **creates or reuses a managed
+   `Player`** under the crew — there is **no `guest_name` string** anywhere.
+   `round_players` reference `player_id` and snapshot that round's handicaps.
+2. **Crew ≠ Group.** `crews` are durable rosters that persist *across* rounds;
+   `groups` are tee groups *within* one event. Distinct tables, never conflated.
+3. **Round belongs to a Crew.** `events.crew_id` is **nullable**: crew is the
+   default at setup but a **crewless one-off** is allowed and simply **does not
+   accrue to any ledger**.
+4. **Stored ledger.** `ledger_entries` is written on settle/end-early (Phase 2),
+   so season-to-date net is a trivial `SUM(amount)` per player per crew.
+   `crew_id` is `NOT NULL` → crewless rounds write no entries.
+5. **HoleScores retained** durably (not cleared after a round) so any record is
+   reconstructable.
+6. **Deferred verbs (data now, UI later):** season-standings UI, head-to-head,
+   settle-the-season, historical recaps/analytics. Phase 2 surfaces only a single
+   read-only season-to-date figure. Do not build the verb UIs early.
+
+### Allowance mode (round-level)
+
+`events.allowance_mode ∈ {full, relative}` — a **round-level** setting (default
+`full`; `relative` = "low man plays scratch"). The handicap engine implements
+`relative` as a thin adjustment on the same code path (full course/playing
+handicap **minus a constant** = the field's lowest), not a separate engine.
+`games.allowance` is a separate per-game *format* multiplier (e.g. 0.85 four-ball).
+
+### RLS model
+
+Two scopes, both honoring "never gate play on an account; never world-readable":
+
+- **Event-scoped** (`events` and children: `groups`, `teams`, `round_players`,
+  `games`, `hole_scores`, `game_results`, `settlements`): a user has access iff
+  they are an **event member** (`event_members`) or a member of the event's crew.
+  The host is auto-added on insert (trigger). **Guests join via `join_code`**
+  through the `join_event_by_code(code)` SECURITY DEFINER RPC, which inserts the
+  caller (account *or* anonymous uid) into `event_members`; normal event-scoped
+  RLS then applies. No raw join-code-in-policy.
+- **Crew-scoped** (`crews`, `crew_members`, `players`, `ledger_entries`): a crew
+  member (and owner) may read/write the crew's roster and ledger across all its
+  events (broader than per-event, required for season-to-date).
+- Recursion is avoided with SECURITY DEFINER helpers `is_crew_member()`,
+  `is_event_member()`, `can_access_group()` (they bypass RLS internally).
+- Anonymous-auth guests are role `authenticated`, so all `to authenticated`
+  policies apply to them — guest play keeps working.
+- `profiles` are self-only; a profile row is auto-created by trigger on every new
+  `auth.users` row (accounts + anonymous).
+
+### Applying & types
+
+Apply via `supabase db push` (atomic, tracked) after `supabase link`, or paste
+the three files into the dashboard SQL editor in order. **Generated types** come
+from `supabase gen types typescript` after the migration is applied (regenerate
+whenever the schema changes) → `src/lib/supabase/database.types.ts`; the clients
+then use `createClient<Database>()`.
 
 ## Open assumptions / to revisit
 
-- Course provider verification (per-hole stroke index + slope/rating coverage)
-  is a Phase 1 prerequisite — flag from the builder pending.
+- Course provider verified: the builder confirmed **GolfCourseAPI returns
+  per-hole stroke index**; it's the primary provider, golfapi.io the fallback
+  behind the `CourseDataProvider` interface.
+- **Course-data RLS is permissive** (any authenticated user may insert/update
+  `courses`/`tee_sets`/`holes`) since it's a shared cache in a single-tenant
+  personal app. Revisit (creator-scoped writes / service-role-only) if this ever
+  goes multi-tenant.
 - Apple/Google OAuth deferred; `.env.example` lists the vars commented out.

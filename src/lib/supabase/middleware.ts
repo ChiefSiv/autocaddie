@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { publicEnv, hasSupabaseEnv } from "@/lib/env";
+import type { Database } from "./database.types";
 
 /**
  * Refreshes the Supabase auth session on every request and writes the rotated
@@ -17,7 +18,7 @@ export async function updateSession(request: NextRequest) {
     return response;
   }
 
-  const supabase = createServerClient(
+  const supabase = createServerClient<Database>(
     publicEnv.supabaseUrl,
     publicEnv.supabaseAnonKey,
     {
