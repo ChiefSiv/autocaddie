@@ -328,24 +328,68 @@ function ScoreContent({ eventId }: { eventId: string }) {
           <div className="flex gap-2 overflow-x-auto pb-1">
             {standings.map((s) => {
               if (s.type === "skins") {
-                const topNet = Object.entries(s.nets).sort((a, b) => b[1] - a[1])[0];
-                const topId = topNet?.[0];
+                const stakesOn = s.potValue > 0;
+                // Sort by money won (then skins) so the leader is on top. Each
+                // money concept is labeled so nothing has to be inferred:
+                //   • "This hole" = money on the line now (ante × carry multiplier)
+                //   • carry badge = how many holes are riding
+                //   • "Won so far" = each player's running NET winnings (+ skins)
+                const rows = Object.keys(s.skinsWon)
+                  .map((id) => ({
+                    id,
+                    net: s.nets[id] ?? 0,
+                    skins: s.skinsWon[id] ?? 0,
+                  }))
+                  .sort((a, b) => b.net - a.net || b.skins - a.skins);
                 return (
-                  <div key={s.id} className="min-w-[160px] flex-none rounded-xl bg-ink p-3 text-white">
-                    <div className="font-label text-[10px] uppercase tracking-[0.12em] opacity-70">
-                      Skins · {s.potValue > 0 ? "on this hole" : "social"}
-                      {s.carry > 0 ? ` · carry ×${s.carry}` : ""}
+                  <div key={s.id} className="min-w-[210px] flex-none rounded-xl bg-ink p-3 text-white">
+                    <div className="flex items-center justify-between">
+                      <span className="font-label text-[10px] uppercase tracking-[0.12em] opacity-70">
+                        Skins
+                      </span>
+                      <span className="font-label rounded-full bg-white/10 px-2 py-0.5 text-[9px] uppercase tracking-[0.08em]">
+                        {s.carry > 0 ? `carrying ×${s.carry}` : "no carry"}
+                      </span>
                     </div>
-                    <div className="font-display text-3xl font-extrabold leading-none">
-                      ${s.potValue}
-                    </div>
-                    {topId && (s.skinsWon[topId] ?? 0) > 0 && (
-                      <div className="mt-1 text-[11px] opacity-80">
-                        {nameById.get(topId)} leads · {s.skinsWon[topId]} skin
-                        {s.skinsWon[topId] > 1 ? "s" : ""}
-                        {s.potValue > 0 && topNet![1] > 0 ? ` · +$${topNet![1]}` : ""}
+                    {stakesOn ? (
+                      <>
+                        <div className="font-label mt-1.5 text-[9px] uppercase tracking-[0.1em] opacity-55">
+                          This hole
+                        </div>
+                        <div className="font-display text-3xl font-extrabold leading-none">
+                          ${s.potValue}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="mt-1.5 text-[11px] opacity-70">
+                        Social — bragging rights
                       </div>
                     )}
+                    <div className="mt-2 border-t border-white/10 pt-2">
+                      <div className="font-label mb-1 text-[9px] uppercase tracking-[0.1em] opacity-55">
+                        {stakesOn ? "Won so far" : "Skins won"}
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        {rows.map((r) => (
+                          <div
+                            key={r.id}
+                            className="flex items-center justify-between gap-3 text-[12px]"
+                          >
+                            <span className="truncate">{nameById.get(r.id) ?? "—"}</span>
+                            <span className="flex-none tabular-nums">
+                              {stakesOn && (
+                                <b className={r.net >= 0 ? "text-up" : "text-down"}>
+                                  {r.net >= 0 ? "+" : "−"}${Math.abs(r.net)}
+                                </b>
+                              )}
+                              <span className="ml-1.5 opacity-55">
+                                {r.skins} skin{r.skins === 1 ? "" : "s"}
+                              </span>
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 );
               }
