@@ -7,20 +7,37 @@ function net(rows: Array<Record<string, number | null>>): HoleScores[] {
   return rows.map((n, i) => ({ hole: i + 1, net: n }));
 }
 
-describe("liveStandings — skins", () => {
-  it("reports the carried pot mid-round", () => {
-    const g: LiveGameConfig = { id: "s", type: "skins", stakesEnabled: true, stake: 5, carryover: true };
-    // hole 1 tie → carry; pot riding = 2 players × $5 × 1 = $10
-    const r = liveStandings([g], players, net([{ A: 4, B: 4 }]), 18);
-    expect(r[0]).toMatchObject({ type: "skins", potValue: 10, carry: 1 });
+describe("liveStandings — skins pot (stakes ON must be NON-zero)", () => {
+  const skins = (stakesEnabled: boolean, stake: number | null): LiveGameConfig => ({
+    id: "s",
+    type: "skins",
+    stakesEnabled,
+    stake,
+    carryover: true,
   });
 
-  it("clears the pot after an outright win and credits the skin", () => {
-    const g: LiveGameConfig = { id: "s", type: "skins", stakesEnabled: true, stake: 5, carryover: true };
-    const r = liveStandings([g], players, net([{ A: 3, B: 4 }]), 18);
+  it("after an outright win the pot is one hole's ante — NOT $0 (regression)", () => {
+    // 2 players, $5. Hole 1 A wins outright → carry 0 → pot on next hole = 5×2×1 = $10.
+    const r = liveStandings([skins(true, 5)], players, net([{ A: 3, B: 4 }]), 18);
     const s = r[0];
-    expect(s.type === "skins" && s.potValue).toBe(0);
+    expect(s.type === "skins" && s.potValue).toBe(10); // was $0 with the old metric
+    expect(s.type === "skins" && s.potValue).toBeGreaterThan(0);
     expect(s.type === "skins" && s.skinsWon.A).toBe(1);
+    expect(s.type === "skins" && s.nets.A).toBe(5); // won $10 pot − $5 ante
+    expect(s.type === "skins" && s.nets.B).toBe(-5);
+  });
+
+  it("pot grows on a tie (carry)", () => {
+    // Hole 1 tie → carry 1 → pot = 5×2×(1+1) = $20.
+    const r = liveStandings([skins(true, 5)], players, net([{ A: 4, B: 4 }]), 18);
+    const s = r[0];
+    expect(s.type === "skins" && s.potValue).toBe(20);
+    expect(s.type === "skins" && s.carry).toBe(1);
+  });
+
+  it("stakes OFF → pot 0", () => {
+    const r = liveStandings([skins(false, 5)], players, net([{ A: 3, B: 4 }]), 18);
+    expect(r[0].type === "skins" && r[0].potValue).toBe(0);
   });
 });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Minus, Plus, Undo2, Lock, Cloud, CloudOff } from "lucide-react";
 import { AppHeader } from "@/components/nav/app-header";
@@ -27,6 +27,26 @@ function ScoreContent({ eventId }: { eventId: string }) {
     user?.id ?? "",
   );
   const [holeChoice, setHoleChoice] = useState<number | null>(null);
+  // Persist the active hole so reopening (screen sleep, reload) returns to it.
+  const holeStorageKey = `autocaddie:hole:${eventId}`;
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      if (typeof window === "undefined") return;
+      const saved = window.localStorage.getItem(holeStorageKey);
+      const n = saved == null ? NaN : Number(saved);
+      if (active && Number.isInteger(n)) setHoleChoice(n);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [holeStorageKey]);
+  const goToHole = (n: number) => {
+    setHoleChoice(n);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(holeStorageKey, String(n));
+    }
+  };
 
   // ── Derived round shapes (hooks must run before any early return) ──────────
   const holeNumbers = useMemo(
@@ -139,11 +159,15 @@ function ScoreContent({ eventId }: { eventId: string }) {
     );
   }
 
-  const currentHole = holeChoice ?? holeNumbers[0];
+  // Fall back to the first hole if the saved/selected hole isn't in play.
+  const currentHole =
+    holeChoice != null && holeNumbers.includes(holeChoice)
+      ? holeChoice
+      : holeNumbers[0];
   const holeMeta = holesInPlay.find((h) => h.number === currentHole)!;
   const idx = holeNumbers.indexOf(currentHole);
-  const goPrev = () => setHoleChoice(holeNumbers[Math.max(0, idx - 1)]);
-  const goNext = () => setHoleChoice(holeNumbers[Math.min(holeNumbers.length - 1, idx + 1)]);
+  const goPrev = () => goToHole(holeNumbers[Math.max(0, idx - 1)]);
+  const goNext = () => goToHole(holeNumbers[Math.min(holeNumbers.length - 1, idx + 1)]);
 
   return (
     <main className="flex flex-1 flex-col pb-[calc(6rem+env(safe-area-inset-bottom))]">
@@ -304,18 +328,22 @@ function ScoreContent({ eventId }: { eventId: string }) {
           <div className="flex gap-2 overflow-x-auto pb-1">
             {standings.map((s) => {
               if (s.type === "skins") {
-                const topId = Object.entries(s.skinsWon).sort((a, b) => b[1] - a[1])[0]?.[0];
+                const topNet = Object.entries(s.nets).sort((a, b) => b[1] - a[1])[0];
+                const topId = topNet?.[0];
                 return (
                   <div key={s.id} className="min-w-[160px] flex-none rounded-xl bg-ink p-3 text-white">
                     <div className="font-label text-[10px] uppercase tracking-[0.12em] opacity-70">
-                      Skins {s.carry > 0 ? `· carry ×${s.carry}` : ""}
+                      Skins · {s.potValue > 0 ? "on this hole" : "social"}
+                      {s.carry > 0 ? ` · carry ×${s.carry}` : ""}
                     </div>
                     <div className="font-display text-3xl font-extrabold leading-none">
                       ${s.potValue}
                     </div>
-                    {topId && s.skinsWon[topId] > 0 && (
+                    {topId && (s.skinsWon[topId] ?? 0) > 0 && (
                       <div className="mt-1 text-[11px] opacity-80">
-                        {nameById.get(topId)} leads · {s.skinsWon[topId]}
+                        {nameById.get(topId)} leads · {s.skinsWon[topId]} skin
+                        {s.skinsWon[topId] > 1 ? "s" : ""}
+                        {s.potValue > 0 && topNet![1] > 0 ? ` · +$${topNet![1]}` : ""}
                       </div>
                     )}
                   </div>

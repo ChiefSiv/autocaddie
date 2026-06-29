@@ -168,6 +168,21 @@ an anon client.
   round's live `selectedPlayers`, so they show real chosen players, not stale
   names. (Confirmed during the course/tee restructure; logged so it's not re-checked.)
 
+- **Active hole now persists.** Hole-entry stores the current hole in
+  `localStorage` (`autocaddie:hole:<eventId>`) and rehydrates to it on load, so a
+  screen-sleep / reload returns to your place instead of hole 1.
+- **Edit-round escape hatch (Phase 2.x).** Lineup-lock after hole 1 is working as
+  designed, but there's **no way to fix an honest setup error** (wrong tee, wrong
+  player) mid-round. Add a deliberate, confirmation-gated "edit round" affordance
+  for genuine errors. Not built yet.
+- **In-round handicap editing — spec gap (Phase 2.x).** Spec says scores AND
+  handicaps stay editable after the lineup locks. **Verified current behavior:**
+  scores ARE editable (navigate to any hole and change it → recompute). Handicaps
+  are NOT editable in-round — they're captured at setup (`round_players` snapshot)
+  and there's no in-round handicap editor on any post-create surface. So handicaps
+  are effectively frozen post-create today (independent of the hole-1 lock). Build
+  the in-round handicap editor alongside the edit-round escape hatch.
+
 ### Phase 3 backlog (do NOT build in Phase 2)
 - **User-settable default home course** in Settings (one place; the round-setup
   course flow stays "unselected each round" per the corrected model).

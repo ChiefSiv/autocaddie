@@ -21,12 +21,15 @@ export type LiveStanding =
   | {
       id: string;
       type: "skins";
-      /** current carried pot value (money up for grabs); 0 when stakes off */
+      /** money on the line for the NEXT hole = ante × (carry + 1); non-zero
+       *  whenever stakes are on, grows on ties. 0 only when stakes off. */
       potValue: number;
       /** trailing carryover length (holes riding) */
       carry: number;
       /** roundPlayerId → skins (holes) won so far */
       skinsWon: Record<string, number>;
+      /** roundPlayerId → signed money won/owed so far (the accrual) */
+      nets: Record<string, number>;
     }
   | {
       id: string;
@@ -63,14 +66,19 @@ export function liveStandings(
         stakes,
         carryover: g.carryover ?? true,
       });
-      // Current pot riding = the trailing unclaimed carry (what the next outright
-      // winner would take). computeSkins reports it as `unclaimed`.
+      // Pot ON THE LINE for the next hole = one hole's ante plus any carried
+      // holes. (r.unclaimed.pot alone is 0 whenever the last hole was won
+      // outright — that's the $0-with-stakes-on bug.) `nets` carries the actual
+      // money won so far so the strip shows accrual, not just who's ahead.
+      const ante = stakes.enabled ? stakes.amount * allPlayerIds.length : 0;
+      const carry = r.unclaimed.holes.length;
       return {
         id: g.id,
         type: "skins",
-        potValue: r.unclaimed.pot,
-        carry: r.unclaimed.holes.length,
+        potValue: ante * (carry + 1),
+        carry,
         skinsWon: r.skinsWon,
+        nets: Object.fromEntries(r.nets.map((n) => [n.playerId, n.amount])),
       };
     }
 
