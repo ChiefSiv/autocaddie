@@ -26,7 +26,16 @@ export function useUser() {
       // Degrade gracefully before Supabase is configured (treated as signed out).
       if (!hasSupabaseEnv()) return null;
       const supabase = createClient();
-      const { data } = await supabase.auth.getUser();
+      // getUser() validates against the server (network). Offline that fails —
+      // fall back to the LOCALLY persisted session (getSession reads storage, no
+      // network) so an in-progress round reloaded offline stays authenticated and
+      // AuthGate doesn't bounce to /signin. Online behavior is unchanged.
+      const { data, error } = await supabase.auth.getUser();
+      if (data.user) return data.user;
+      if (error) {
+        const { data: s } = await supabase.auth.getSession();
+        if (s.session?.user) return s.session.user;
+      }
       return data.user ?? null;
     },
     staleTime: Infinity,

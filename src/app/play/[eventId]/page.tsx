@@ -6,6 +6,7 @@ import { AppHeader } from "@/components/nav/app-header";
 import { AuthGate } from "@/components/auth/auth-gate";
 import { SectionHeader } from "@/components/ui/section";
 import { useEvent } from "@/lib/queries/events";
+import { useWarmRouteCache } from "@/lib/offline/warm-route";
 
 // Round home — FIRST CUT (build prompt §8). Confirms the round persisted (players
 // with computed handicaps, games, join code) and is the entry to hole-by-hole
@@ -13,6 +14,7 @@ import { useEvent } from "@/lib/queries/events";
 // the next Phase 2 steps; "Enter scores" is wired when hole-entry lands.
 
 function RoundHome({ eventId }: { eventId: string }) {
+  useWarmRouteCache(); // keep the round reachable on an offline reload
   const { data: round, isLoading } = useEvent(eventId);
 
   if (isLoading) {

@@ -217,6 +217,37 @@ old app shell, so it must be removed manually once.
 clears caches and reloads once (sessionStorage-guarded). After the one-time manual
 clear, this keeps a leftover prod SW from poisoning dev again. Not emitted in prod.
 
+## 📴 Offline reload of a dynamic route dropped to /offline (SW caching, fragile)
+
+**Symptom:** enter scores online, go offline, **reload** `/play/[eventId]/score` →
+the `/offline` fallback appeared instead of the in-progress round. (Data was safe —
+IndexedDB + outbox synced fine once back online; the *route* just wasn't reachable
+offline.)
+
+**Cause (two layers):**
+1. **SW:** dynamic app routes are reached by client-side navigation, so their HTML
+   document is never fetched — nothing for Serwist's NetworkFirst page cache to
+   store. An offline reload is a real document navigation that misses cache →
+   Serwist serves the `/offline` fallback (matcher = any `document`).
+2. **Auth:** even with the doc served, `useUser` called `supabase.auth.getUser()`
+   (network), which fails offline → AuthGate would bounce to `/signin`.
+
+**Fix:**
+- `useWarmRouteCache()` (`src/lib/offline/warm-route.ts`), called on the round
+  home + score routes: while online it re-fetches `location.href` so the SW
+  runtime-caches the document. Offline reload then hits that cache (NetworkFirst
+  → cache) and the client rehydrates from IndexedDB; `/offline` only fires for
+  routes with nothing cached. No-op without a SW (dev) or offline.
+- `useUser` now falls back to `supabase.auth.getSession()` (local storage, no
+  network) when `getUser()` fails, so an offline reload stays authenticated.
+
+**Confirm by hand (prod build only — SW is off in dev):** `npm run build && npm
+start`, enter scores, DevTools → Network Offline, reload `/play/[eventId]/score`
+→ the round + all entered scores load and are fully usable offline.
+
+SW caching remains a **fragile area** (also caused the stale-chunk ghost earlier) —
+change deliberately and re-confirm offline behavior by hand after any SW edit.
+
 ## 📝 Notes
 
 - **Service worker is disabled in development** (`next.config.ts`). Test PWA

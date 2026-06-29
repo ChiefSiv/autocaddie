@@ -8,6 +8,7 @@ import { AuthGate } from "@/components/auth/auth-gate";
 import { useUser } from "@/lib/auth/use-user";
 import { useEvent } from "@/lib/queries/events";
 import { useRoundScores } from "@/lib/queries/scores";
+import { useWarmRouteCache } from "@/lib/offline/warm-route";
 import {
   deriveScoring,
   holesInPlayNumbers,
@@ -20,6 +21,7 @@ import { netScore } from "@/lib/handicap/engine";
 import { liveStandings, type LiveGameConfig } from "@/lib/games/live";
 
 function ScoreContent({ eventId }: { eventId: string }) {
+  useWarmRouteCache(); // make this round reachable on an offline reload
   const { data: user } = useUser();
   const { data: round, isLoading } = useEvent(eventId);
   const { scores, setScore, ready, syncing, pendingCount } = useRoundScores(
