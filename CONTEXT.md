@@ -12,9 +12,11 @@ data layer are all built and verified. **Phase 2 started engines-first:** the
 Skins / Nassau / Match Play game engines + the settlement engine are built as
 pure, tested functions (`src/lib/games/`), GREEN before any UI — see
 [claude-code-build-prompt-phase-2.md](claude-code-build-prompt-phase-2.md).
-**Round setup + the mandatory stroke-index gate** (`/play`) **and hole-entry +
-live scoring + local-first persistence** (`/play/[eventId]/score`) are built;
-recap → settle are next.
+The full Phase 2 path is built: **setup + SI gate** (`/play`), **hole-entry +
+live scoring + local-first** (`/score`), **recap** (`/recap`), **two-pane
+scorecard** (`/card`), and **settle-up with the durable ledger written on settle**
+(`/settle`). The `ledger_unique` migration is applied to remote. Remaining polish:
+full round-home hero/strip.
 
 **Open items to carry into Phase 2:**
 1. **Manual stroke-index entry is a MANDATORY core path.** Real courses (e.g.
@@ -335,6 +337,26 @@ contract + helpers in `types.ts` (`HoleScores`, `Side`, `Stakes`, `roundMoney`,
   load. Last-write-wins on `updated_at`+`version`; pick-up `null` preserved through
   sync. **Lock-after-hole-1** = the round's first hole has any entry (lineup fixed;
   scores/handicaps stay editable).
+
+### Recap / scorecard / settle + ledger (Phase 2 — `/recap`, `/card`, `/settle`)
+
+- **`round-results.ts`** (pure) runs the engines over complete holes → per-game
+  detail (skins won/pot, nassau segments, match result) + combined settlement (sum
+  every game's nets → `minimizePayments`). Same call serves a finished 18 and an
+  **end-early** partial (it uses whatever holes are complete). `round-compute.ts`
+  (client) adapts a `RoundView` + local scores into it.
+- **`ledger.ts`** (pure): `buildLedgerRows` emits one row per player (idempotent),
+  paid-flag policy = reset iff amount changed else preserve; `seasonToDate` = SUM
+  per player. **`useSettleRound`** upserts on `UNIQUE(event_id, player_id)` (migration
+  applied) and **writes nothing for a crewless one-off**. Status → `completed`.
+- **Settle-up** (`/settle`): minimized who-pays-whom (default), by-game toggle (only
+  with 2+ games), **mark-as-paid** (local checklist in `localStorage` per event —
+  not synced; "we just track it"), per-player **season-to-date**, end-early banner.
+- **Scorecard** (`/card`): two-pane frozen column (split panes + matched row
+  heights, NOT sticky cells, NO `-webkit-overflow-scrolling`), gross+net per cell,
+  birdie ring / double-box, Out/In/Tot, tap-a-cell → that hole's entry.
+- **Recap** (`/recap`): who-won-what per game + birdies+, links to card and settle.
+- Season-to-date is now live in the **setup picker** too ("$0 with this crew").
 
 ### Settlement engine (Phase 2 — `src/lib/games/settlement.ts`)
 

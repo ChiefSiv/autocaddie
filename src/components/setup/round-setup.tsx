@@ -506,9 +506,17 @@ export function RoundSetup() {
                         managed
                       </span>
                     )}
-                    {season != null && season !== 0 && (
-                      <span className={`text-[11px] ${season > 0 ? "text-up" : "text-down"}`}>
-                        {fmtMoney(season)} season
+                    {crewId && (
+                      <span
+                        className={`text-[11px] ${
+                          (season ?? 0) > 0
+                            ? "text-up"
+                            : (season ?? 0) < 0
+                              ? "text-down"
+                              : "text-muted"
+                        }`}
+                      >
+                        {(season ?? 0) === 0 ? "$0" : fmtMoney(season ?? 0)} with this crew
                       </span>
                     )}
                   </div>

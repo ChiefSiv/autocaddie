@@ -436,10 +436,10 @@ function ScoreContent({ eventId }: { eventId: string }) {
           </button>
         ) : (
           <Link
-            href={`/play/${eventId}`}
+            href={`/play/${eventId}/recap`}
             className="font-label flex-1 rounded-xl bg-fairway py-3 text-center text-sm font-bold uppercase tracking-[0.08em] text-white"
           >
-            Done
+            Done → recap
           </Link>
         )}
       </div>

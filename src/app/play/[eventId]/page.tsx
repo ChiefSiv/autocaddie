@@ -120,6 +120,27 @@ function RoundHome({ eventId }: { eventId: string }) {
           Players &amp; games lock once hole {round.whichNine === "back" ? 10 : 1}{" "}
           is entered; scores and handicaps stay editable.
         </p>
+
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          <Link
+            href={`/play/${eventId}/card`}
+            className="rounded-xl border border-line bg-card py-3 text-center font-label text-xs font-semibold uppercase tracking-[0.05em] shadow-card"
+          >
+            Scorecard
+          </Link>
+          <Link
+            href={`/play/${eventId}/recap`}
+            className="rounded-xl border border-line bg-card py-3 text-center font-label text-xs font-semibold uppercase tracking-[0.05em] shadow-card"
+          >
+            Recap
+          </Link>
+          <Link
+            href={`/play/${eventId}/settle`}
+            className="rounded-xl border border-line bg-card py-3 text-center font-label text-xs font-semibold uppercase tracking-[0.05em] shadow-card"
+          >
+            Settle / end
+          </Link>
+        </div>
       </div>
     </main>
   );

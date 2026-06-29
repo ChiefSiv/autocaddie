@@ -211,6 +211,31 @@ Build order: **engines GREEN before any UI**, then setup → play → recap → 
   (UI badge; lineup not editable from any post-create surface; scores/handicaps
   stay editable). 74 tests; tsc + eslint + build green.
 
+### Recap → settle + scorecard + durable ledger  ✅ (first cut)
+- ✅ **Ledger migration APPLIED** to remote: `20260628120005_ledger_unique.sql`
+  (`UNIQUE(event_id, player_id)`) pushed via `supabase db push` (docker warning is
+  catalog-cache only; ALTER succeeded).
+- ✅ Pure ledger logic (`src/lib/ledger/ledger.ts`): `buildLedgerRows` (one row per
+  player, idempotent, paid-flag policy = reset iff amount changed) + `seasonToDate`
+  (SUM per player). `useSettleRound` upserts on the unique key; **crewless one-off
+  writes no ledger** (structural).
+- ✅ Round-results compute (`src/lib/games/round-results.ts`): engines over complete
+  holes → per-game detail + combined settlement (sum → minimized payments). Same
+  call serves a full 18 and an **end-early** partial.
+- ✅ Settle-up screen (`/play/[eventId]/settle`): field strip, who-pays-whom
+  (minimized), **by-game toggle only with 2+ games**, **mark-as-paid** (local
+  checklist, persisted per event), **season-to-date** per player, end-early banner,
+  "Settle & save to ledger".
+- ✅ Two-pane scorecard (`/play/[eventId]/card`): frozen name pane + scrolling holes
+  (split panes, matched row heights — NOT sticky cells), gross+net per cell, birdie
+  ring / double-box, Out/In/Tot, tap-a-cell → hole entry.
+- ✅ Recap (`/play/[eventId]/recap`): who-won-what per game, birdies+, final-card
+  link, settle CTA. Round-home links to card/recap/settle; score "Done" → recap.
+- ✅ Season-to-date **live in the setup picker** ("$0 with this crew" zero state).
+- ✅ Tests: ledger idempotency + paid policy + two-round season sum; round-results
+  multi-game combined settlement (minimized ≠ pairwise, stakes-off = $0). 87 total;
+  tsc + eslint + build green.
+
 ### Remaining (UI + persistence)  ⬜
 - ⬜ Round home full (single-game hero / 2+ swipe strip).
 - ⬜ Hole-entry screen (all players, gross, stroke dots, pick-up, live standings).

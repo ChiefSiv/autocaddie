@@ -155,9 +155,17 @@ an anon client.
   `getOrCacheCourse`/`insertCourse` path in `src/lib/courses/cache.ts`) or the
   GolfCourseAPI mapping emitting the tee twice (male/female grouping?). Fix with a
   unique-on-(course_id, name[, gender]) guard or upsert, and de-dupe existing rows.
-- **Season-to-date zero state.** The per-player figure currently renders *nothing*
-  pre-settle (only shows when `!= 0`). Should show a clean "$0 with this crew"
-  zero state in the setup picker + settle-up so the number is legible from day one.
+- ✅ **Season-to-date zero state — done.** Now shows "$0 with this crew" in the
+  setup picker and per-player on settle-up (live `SUM(ledger_entries.amount)`).
+- **Mark-as-paid is a LOCAL checklist (not synced).** On settle-up, marking a
+  payment paid persists to `localStorage` per event (offline-safe; "we just track
+  it"). It does NOT write the ledger `paid` flag (that flag is per-player-net, set
+  on settle per the amount-changed policy; payments are minimized cross-player and
+  don't map 1:1 to entries). Cross-device sync of the paid checklist is a later
+  nicety. Season-to-date sums `amount` regardless of `paid` (correct).
+- **`settlements` table is unused so far.** Settle-up recomputes from scores each
+  time and writes `ledger_entries` (the durable payoff). Persisting a `settlements`
+  row (combined JSON snapshot) is optional record-keeping for later.
 - **Skins gross option not exposed.** Spec says Skins is "net default, gross
   optional." Today the setup UI hard-codes every game to `gross_or_net: "net"` with
   no toggle, so Skins is **net-locked** (Nassau/Match are correctly net-only). The
