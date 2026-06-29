@@ -41,6 +41,61 @@ describe("liveStandings — skins pot (stakes ON must be NON-zero)", () => {
   });
 });
 
+describe("liveStandings — skins 'won so far' (gross) is MONOTONIC across pick-ups", () => {
+  const g: LiveGameConfig = {
+    id: "s",
+    type: "skins",
+    stakesEnabled: true,
+    stake: 5,
+    carryover: true,
+  };
+  // Pick-ups on BOTH sides. Pots (2 players × $5 = $10/hole):
+  //  h1 A wins $10 · h2 B wins $10 (A picked up) · h3 carry · h4 A wins $20
+  //  (covers h3+h4) · h5 A wins $10 (B picked up)
+  const full = net([
+    { A: 4, B: 5 },
+    { A: null, B: 4 },
+    { A: 4, B: 4 },
+    { A: 4, B: 5 },
+    { A: 5, B: null },
+  ]);
+  const wonAt = (n: number) => {
+    const r = liveStandings([g], players, full.slice(0, n), 18)[0];
+    if (r.type !== "skins") throw new Error("not skins");
+    return r.won;
+  };
+
+  it("each player's gross won never decreases hole to hole", () => {
+    let prevA = -1;
+    let prevB = -1;
+    for (let n = 1; n <= 5; n++) {
+      const w = wonAt(n);
+      expect(w.A).toBeGreaterThanOrEqual(prevA);
+      expect(w.B).toBeGreaterThanOrEqual(prevB);
+      prevA = w.A;
+      prevB = w.B;
+    }
+  });
+
+  it("per-hole won deltas equal the pots awarded that hole", () => {
+    const seq = [1, 2, 3, 4, 5].map(wonAt);
+    const delta = (k: "A" | "B", i: number) =>
+      seq[i][k] - (i === 0 ? 0 : seq[i - 1][k]);
+    expect([0, 1, 2, 3, 4].map((i) => delta("A", i))).toEqual([10, 0, 0, 20, 10]);
+    expect([0, 1, 2, 3, 4].map((i) => delta("B", i))).toEqual([0, 10, 0, 0, 0]);
+  });
+
+  it("settlement net stays correct (A +15 / B −15) and is distinct from gross won", () => {
+    const r = liveStandings([g], players, full, 18)[0];
+    if (r.type !== "skins") throw new Error("not skins");
+    expect(r.nets.A).toBe(15); // (4 − 1 skins) × $5
+    expect(r.nets.B).toBe(-15);
+    expect(r.nets.A + r.nets.B).toBe(0);
+    expect(r.won.A).toBe(40); // gross pots collected — the monotonic accrual
+    expect(r.won.B).toBe(10);
+  });
+});
+
 describe("liveStandings — match (live 'thru N', not closed)", () => {
   it("reads '2 up' thru 2 of 18, not a closeout", () => {
     const g: LiveGameConfig = {

@@ -28,7 +28,19 @@ export type LiveStanding =
       carry: number;
       /** roundPlayerId → skins (holes) won so far */
       skinsWon: Record<string, number>;
-      /** roundPlayerId → signed money won/owed so far (the accrual) */
+      /**
+       * roundPlayerId → GROSS money won so far (sum of pots collected). This is
+       * the MONOTONIC "won so far" accrual: it only ever increases (winning a hole
+       * adds its pot; losing/picking-up adds nothing). Use THIS for a running
+       * winnings display, not `nets`.
+       */
+      won: Record<string, number>;
+      /**
+       * roundPlayerId → signed NET position (gross won − antes). This is the
+       * settlement figure and is NOT monotonic by nature: in a zero-sum game your
+       * net drops by your ante whenever an opponent wins a hole. Use for settle-up,
+       * not for a "won so far" running total.
+       */
       nets: Record<string, number>;
     }
   | {
@@ -72,12 +84,20 @@ export function liveStandings(
       // money won so far so the strip shows accrual, not just who's ahead.
       const ante = stakes.enabled ? stakes.amount * allPlayerIds.length : 0;
       const carry = r.unclaimed.holes.length;
+      // GROSS won per player = sum of pots collected. Built from awarded-hole
+      // outcomes, so it only grows (monotonic) — the correct "won so far" accrual.
+      const won: Record<string, number> = {};
+      for (const id of allPlayerIds) won[id] = 0;
+      for (const o of r.holes) {
+        if (o.result === "won") won[o.winnerId] = (won[o.winnerId] ?? 0) + o.potAmount;
+      }
       return {
         id: g.id,
         type: "skins",
         potValue: ante * (carry + 1),
         carry,
         skinsWon: r.skinsWon,
+        won,
         nets: Object.fromEntries(r.nets.map((n) => [n.playerId, n.amount])),
       };
     }
