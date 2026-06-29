@@ -190,8 +190,29 @@ Build order: **engines GREEN before any UI**, then setup → play → recap → 
   course/strokes handicaps, games — confirms persistence; "Enter scores" stubbed.
 - ✅ tsc + eslint clean; `next build` green (14 routes); 63 tests.
 
+### Hole-entry + live scoring + local-first  ✅ (first cut)
+- ✅ Scoring compute layer (`src/lib/games/scoring.ts`, `live.ts` — pure, tested):
+  tri-state per (player,hole) — **number=score, null=pick-up, undefined=not
+  entered**; net derived (gross − strokes received via the handicap engine, using
+  `round_players.playing_handicap`); only **complete holes** (all players entered)
+  feed the engines; `liveStandings` runs Skins/Nassau/Match for the strip. Match
+  engine got an optional `totalHoles` (defaults to `holes.length`) so live status
+  reads "2 up thru 13" instead of a false closeout.
+- ✅ **Pick-up writes `null`, never 0** — verified in `scoring.test.ts` (null → net
+  null, distinct from a real score; flows through engines).
+- ✅ Hole-entry screen (`/play/[eventId]/score`): all players on one hole, gross
+  stepper, **stroke dots**, one-tap **pick-up** (+ undo), next/back (no
+  auto-advance), editing a past hole recomputes (derived each render), live
+  standings strip (skins pot/carry, match status, nassau segments).
+- ✅ **Local-first** (`src/lib/db/index.ts` + `useRoundScores`): optimistic write
+  to Dexie, outbox flush to Supabase when online, hydrate-from-remote on load;
+  in-progress round survives offline + restart. Sync badge (saved / N unsynced).
+- ✅ **Lock-after-hole-1**: `roundLocked` when the round's first hole has any entry
+  (UI badge; lineup not editable from any post-create surface; scores/handicaps
+  stay editable). 74 tests; tsc + eslint + build green.
+
 ### Remaining (UI + persistence)  ⬜
-- ⬜ Round home full (single-game hero / 2+ swipe strip) + live standings.
+- ⬜ Round home full (single-game hero / 2+ swipe strip).
 - ⬜ Hole-entry screen (all players, gross, stroke dots, pick-up, live standings).
 - ⬜ Two-pane scorecard (split panes, gross+net, tap-to-jump).
 - ⬜ Recap → settle-up (minimized + by-game toggle, mark-as-paid, end-early,

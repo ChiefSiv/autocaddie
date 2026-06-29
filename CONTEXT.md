@@ -12,8 +12,9 @@ data layer are all built and verified. **Phase 2 started engines-first:** the
 Skins / Nassau / Match Play game engines + the settlement engine are built as
 pure, tested functions (`src/lib/games/`), GREEN before any UI — see
 [claude-code-build-prompt-phase-2.md](claude-code-build-prompt-phase-2.md).
-**Round setup + the mandatory stroke-index gate are built** (`/play`); hole-entry
-→ recap → settle are next.
+**Round setup + the mandatory stroke-index gate** (`/play`) **and hole-entry +
+live scoring + local-first persistence** (`/play/[eventId]/score`) are built;
+recap → settle are next.
 
 **Open items to carry into Phase 2:**
 1. **Manual stroke-index entry is a MANDATORY core path.** Real courses (e.g.
@@ -310,6 +311,30 @@ contract + helpers in `types.ts` (`HoleScores`, `Side`, `Stakes`, `roundMoney`,
 - **Sides** can hold multiple players (best-ball: side's hole net = lowest among
   its players; side's net split evenly). v1 UI picks single-player sides; the
   aggregation is there so team formats drop in later without re-architecting.
+
+### Live scoring + hole-entry (Phase 2 — `scoring.ts`, `live.ts`, `/score`)
+
+- **`scoring.ts`** bridges raw GROSS entry to net + the engines. Tri-state per
+  (player, hole): **number = score, `null` = pick-up, `undefined` = not entered.**
+  The null-vs-0 distinction is load-bearing (0 is a real score; pick-up must be
+  null). Net = gross − strokes received, allocated from `round_players.playing_
+  handicap` (allowance already applied at setup) across the played holes by SI.
+  Only **complete holes** (every player entered) feed the engines, so a
+  half-entered hole never skews live standings.
+- **`live.ts`** runs the engines over complete holes for the on-screen strip.
+  Match uses the new optional **`MatchInput.totalHoles`** (defaults to
+  `holes.length`) so mid-round status reads "2 up thru 13" rather than a false
+  closeout; final settlement passes all scheduled holes and is unchanged.
+- **Hole-entry** (`/play/[eventId]/score`): all players on one hole, gross stepper,
+  stroke dots, one-tap pick-up (writes null) + undo, next/back (no auto-advance),
+  edit-recompute (derived each render), live standings strip.
+- **Local-first** (`src/lib/db/index.ts` `flushOutbox`/`hydrateHoleScores` +
+  `useRoundScores`): IndexedDB is the UI's source of truth (optimistic, offline,
+  restart-safe); the outbox upserts to Supabase on the natural key
+  (`group_id,round_player_id,hole_number`) when online; hydration pulls remote on
+  load. Last-write-wins on `updated_at`+`version`; pick-up `null` preserved through
+  sync. **Lock-after-hole-1** = the round's first hole has any entry (lineup fixed;
+  scores/handicaps stay editable).
 
 ### Settlement engine (Phase 2 — `src/lib/games/settlement.ts`)
 

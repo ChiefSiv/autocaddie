@@ -5,7 +5,6 @@ import Link from "next/link";
 import { AppHeader } from "@/components/nav/app-header";
 import { AuthGate } from "@/components/auth/auth-gate";
 import { SectionHeader } from "@/components/ui/section";
-import { Button } from "@/components/ui/button";
 import { useEvent } from "@/lib/queries/events";
 
 // Round home — FIRST CUT (build prompt §8). Confirms the round persisted (players
@@ -109,14 +108,15 @@ function RoundHome({ eventId }: { eventId: string }) {
       </section>
 
       <div className="mt-8">
-        <Button
-          disabled
-          className="font-label h-auto w-full rounded-xl bg-flare py-4 text-[15px] font-bold uppercase tracking-[0.08em] text-white"
+        <Link
+          href={`/play/${eventId}/score`}
+          className="font-label block w-full rounded-xl bg-flare py-4 text-center text-[15px] font-bold uppercase tracking-[0.08em] text-white"
         >
-          Enter scores (next)
-        </Button>
+          Enter scores
+        </Link>
         <p className="mt-2 text-center text-xs text-muted">
-          Hole-by-hole entry lands in the next Phase 2 step.
+          Players &amp; games lock once hole {round.whichNine === "back" ? 10 : 1}{" "}
+          is entered; scores and handicaps stay editable.
         </p>
       </div>
     </main>

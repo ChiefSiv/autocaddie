@@ -32,6 +32,8 @@ export interface RoundView {
   crewId: string | null;
   courseName: string | null;
   teeName: string | null;
+  teeSetId: string | null;
+  holes: { number: number; par: number; strokeIndex: number | null }[];
   groupId: string | null;
   players: RoundPlayerView[];
   games: RoundGameView[];
@@ -47,11 +49,25 @@ export function useEvent(eventId: string) {
       const { data: e } = await supabase
         .from("events")
         .select(
-          "id, status, date, join_code, holes_to_play, which_nine, allowance_mode, crew_id, course:courses(name), tee:tee_sets(name)",
+          "id, status, date, join_code, holes_to_play, which_nine, allowance_mode, crew_id, tee_set_id, course:courses(name), tee:tee_sets(name)",
         )
         .eq("id", eventId)
         .maybeSingle();
       if (!e) return null;
+
+      let holes: { number: number; par: number; strokeIndex: number | null }[] = [];
+      if (e.tee_set_id) {
+        const { data: holeRows } = await supabase
+          .from("holes")
+          .select("number, par, stroke_index")
+          .eq("tee_set_id", e.tee_set_id)
+          .order("number");
+        holes = (holeRows ?? []).map((h) => ({
+          number: h.number,
+          par: h.par,
+          strokeIndex: h.stroke_index,
+        }));
+      }
 
       const { data: group } = await supabase
         .from("groups")
@@ -99,6 +115,8 @@ export function useEvent(eventId: string) {
         crewId: e.crew_id,
         courseName: e.course?.name ?? null,
         teeName: e.tee?.name ?? null,
+        teeSetId: e.tee_set_id,
+        holes,
         groupId: group?.id ?? null,
         players,
         games: (gameRows ?? []).map((g) => ({

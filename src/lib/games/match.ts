@@ -58,8 +58,12 @@ export interface MatchResult {
 export interface MatchInput {
   sideA: Side;
   sideB: Side;
-  holes: HoleScores[]; // the match's scheduled holes (9 or 18)
+  holes: HoleScores[]; // the holes to score (final: all scheduled; live: those played)
   stakes: Stakes;
+  /** Scheduled hole count for remaining/closeout math. Defaults to holes.length
+   *  (final settlement). For LIVE standings pass the round's scheduled total so
+   *  "remaining" = scheduled − played and a mid-round lead doesn't read as closed. */
+  totalHoles?: number;
 }
 
 function statusText(leaderId: string | null, lead: number): string {
@@ -74,7 +78,7 @@ function splitSideNet(side: Side, amount: number): PlayerNet[] {
 
 export function computeMatch(input: MatchInput): MatchResult {
   const { sideA, sideB, holes } = input;
-  const total = holes.length;
+  const total = input.totalHoles ?? holes.length;
   const stake = input.stakes.enabled ? input.stakes.amount : 0;
 
   let wonA = 0;
