@@ -183,16 +183,17 @@ an anon client.
   are effectively frozen post-create today (independent of the hole-1 lock). Build
   the in-round handicap editor alongside the edit-round escape hatch.
 
-- **Skins live strip: wire "Won so far" to `won` (gross), not `nets`.** The
-  hand-entry strip currently shows each player's `nets` (NET position) under a
-  "Won so far" label. Net is the correct settlement figure but is **non-monotonic
-  by nature** — in zero-sum skins your net drops by your ante whenever an opponent
-  wins a hole (looked like a bug when Ryan's total fell +$25→+$20 as Jared won a
-  hole; it's correct). `live.ts` now also returns a **monotonic `won`** (gross pots
-  collected; per-hole delta = pot awarded). DISPLAY change pending (layout left
-  untouched this turn): show `won` for the running "Won so far" total and present
-  `nets` separately/clearly as the settle figure. Covered by live.test.ts
-  (monotonic across pick-ups both sides; net settlement preserved).
+- **Skins live strip redesign (DECIDED; build next turn with the owner's exact
+  hierarchy spec).** Headline per player = **NET (`nets`)** — what actually settles
+  — shown as e.g. "Ryan +$30", with **skins count as supporting detail** ("· 5
+  skins"). Net legitimately moves BOTH directions (in zero-sum skins your net drops
+  by your ante when an opponent wins a hole — this is correct, not a bug; clear
+  labels make it read right). The headline and settle-up MUST agree on the number
+  that changes hands, so do NOT feature gross. `live.ts` also exposes a monotonic
+  **`won`** (gross pots collected) — **reserved** for a possible separate "pots
+  collected" stat, NOT shown in the main strip for now. Owner will spec the visual
+  hierarchy (net headline first/biggest, hole+carry detail secondary) at build time.
+  Both metrics covered by live.test.ts (net settlement preserved; `won` monotonic).
 
 ### Phase 3 backlog (do NOT build in Phase 2)
 - **User-settable default home course** in Settings (one place; the round-setup
