@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Check, ArrowRight } from "lucide-react";
 import { AppHeader } from "@/components/nav/app-header";
 import { AuthGate } from "@/components/auth/auth-gate";
+import { RoundSubnav } from "@/components/nav/round-subnav";
 import { useUser } from "@/lib/auth/use-user";
 import { useEvent } from "@/lib/queries/events";
 import { useRoundScores } from "@/lib/queries/scores";
@@ -87,6 +88,7 @@ function SettleContent({ eventId }: { eventId: string }) {
 
   return (
     <main className="flex flex-1 flex-col pb-12">
+      <RoundSubnav eventId={eventId} active="settle" />
       <div className="py-5">
         <p className="eyebrow">
           {round.courseName ?? "Round"} · {partial ? `${results.thru} of ${total} holes` : `${total} holes`}

@@ -4,6 +4,7 @@ import { use, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/nav/app-header";
 import { AuthGate } from "@/components/auth/auth-gate";
+import { RoundSubnav } from "@/components/nav/round-subnav";
 import { useUser } from "@/lib/auth/use-user";
 import { useEvent } from "@/lib/queries/events";
 import { useRoundScores } from "@/lib/queries/scores";
@@ -101,6 +102,7 @@ function ScorecardContent({ eventId }: { eventId: string }) {
 
   return (
     <main className="flex flex-1 flex-col pb-10">
+      <RoundSubnav eventId={eventId} active="card" />
       <div className="py-5">
         <p className="eyebrow">{round.courseName ?? "Round"} · {round.teeName ?? ""}</p>
         <h1 className="font-display mt-0.5 text-3xl font-extrabold uppercase leading-none">The card</h1>

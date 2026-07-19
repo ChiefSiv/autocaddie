@@ -9,6 +9,7 @@ import { useUser } from "@/lib/auth/use-user";
 import { useEvent } from "@/lib/queries/events";
 import { useRoundScores } from "@/lib/queries/scores";
 import { useWarmRouteCache } from "@/lib/offline/warm-route";
+import { RoundSubnav } from "@/components/nav/round-subnav";
 import {
   deriveScoring,
   holesInPlayNumbers,
@@ -173,6 +174,7 @@ function ScoreContent({ eventId }: { eventId: string }) {
 
   return (
     <main className="flex flex-1 flex-col pb-[calc(6rem+env(safe-area-inset-bottom))]">
+      <RoundSubnav eventId={eventId} active="score" />
       {/* Hole header + navigation */}
       <div className="sticky top-0 z-10 -mx-4 border-b border-line bg-bg/85 px-4 py-3 backdrop-blur">
         <div className="flex items-center justify-between">
