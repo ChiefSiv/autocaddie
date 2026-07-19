@@ -154,6 +154,12 @@ scripts/gen-icons.mjs    # rasterizes SVG -> PNG app icons (npm run gen:icons)
    OAuth still deferred. Session lives in **cookies** (`createBrowserClient`), so the
    `proxy.ts` refresh keeps it alive across visits/restarts; `useUser` falls back to
    the local session offline.
+3. **Password reset**: `/signin` → "Forgot password?" = `resetPasswordForEmail`
+   (redirect `/auth/callback?next=/auth/reset-password`). The recovery link hits
+   `/auth/callback` (exchanges the code, also forces `next=/auth/reset-password` on
+   `type=recovery`) → **`/auth/reset-password`** shows a set-password form calling
+   `updateUser({ password })`. This also sets a password for the FIRST time on an
+   account created via magic link (recovery session, not a duplicate signup).
 3. `proxy.ts` (`updateSession`) refreshes the session cookie on each request.
    Nothing gates *playing* — a guest session is enough.
 

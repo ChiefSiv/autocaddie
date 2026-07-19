@@ -15,7 +15,9 @@ type Status =
   | "signup-loading"
   | "magic-loading"
   | "magic-sent"
-  | "confirm-sent";
+  | "confirm-sent"
+  | "reset-loading"
+  | "reset-sent";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -88,6 +90,28 @@ export default function SignInPage() {
       return;
     }
     setStatus("confirm-sent"); // confirmation required
+  }
+
+  // Forgot password → email a recovery link that lands on /auth/reset-password.
+  // Works for an account that has no password yet (e.g. created via magic link):
+  // the recovery session lets updateUser({ password }) set one.
+  async function sendReset() {
+    setError(null);
+    if (!email) {
+      setError("Enter your email first, then tap “Forgot password?”");
+      return;
+    }
+    setStatus("reset-loading");
+    const supabase = createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${publicEnv.siteUrl}/auth/callback?next=/auth/reset-password`,
+    });
+    if (error) {
+      setError(error.message);
+      setStatus("idle");
+      return;
+    }
+    setStatus("reset-sent");
   }
 
   // Passwordless magic link — kept as an alternative.
@@ -163,6 +187,11 @@ export default function SignInPage() {
             <Mail className="mx-auto mb-2 size-5 text-fairway" aria-hidden />
             Check <b>{email}</b> for a sign-in link.
           </div>
+        ) : status === "reset-sent" ? (
+          <div className="rounded-md border border-line bg-card p-4 text-center text-sm shadow-card">
+            <Mail className="mx-auto mb-2 size-5 text-fairway" aria-hidden />
+            Check <b>{email}</b> for a link to set a new password.
+          </div>
         ) : status === "confirm-sent" ? (
           <div className="rounded-md border border-line bg-card p-4 text-center text-sm shadow-card">
             <Mail className="mx-auto mb-2 size-5 text-fairway" aria-hidden />
@@ -203,13 +232,23 @@ export default function SignInPage() {
                 Create account
               </button>
             </div>
-            <button
-              type="button"
-              onClick={() => { setMode("magic"); setError(null); }}
-              className="font-label text-center text-[11px] uppercase tracking-[0.08em] text-muted underline-offset-2 hover:underline"
-            >
-              Email me a magic link instead
-            </button>
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => { setMode("magic"); setError(null); }}
+                className="font-label text-[11px] uppercase tracking-[0.08em] text-muted underline-offset-2 hover:underline"
+              >
+                Magic link instead
+              </button>
+              <button
+                type="button"
+                onClick={sendReset}
+                disabled={busy}
+                className="font-label text-[11px] uppercase tracking-[0.08em] text-muted underline-offset-2 hover:underline disabled:opacity-70"
+              >
+                Forgot password?
+              </button>
+            </div>
           </form>
         ) : (
           <form onSubmit={sendMagicLink} className="flex flex-col gap-3">
