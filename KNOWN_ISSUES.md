@@ -37,11 +37,25 @@ live in the scrolling pane.
   state (treated as max or excluded), never a forced number. (`LocalHoleScore.
   strokes` is `number | null`.)
 
+## ⏸️ "Failed to fetch" on any auth/data call = PAUSED Supabase project
+
+Free-tier Supabase projects **pause after ~1 week idle**. While paused, every
+auth/data request (sign-in, RLS reads, ledger writes) fails with a generic
+**"Failed to fetch"** / network error — the client can't reach the project at all.
+This is NOT a code, CORS, TLS, or env bug. **Recovery: resume the project from the
+Supabase dashboard** (Project → Resume), wait ~1 min, retry. Don't re-diagnose it as
+a client bug. (Guest/session code degrades gracefully — `useUser` falls back to the
+local session — but no *new* auth or data call can succeed until the project is up.)
+
 ## ⚠️ Phase 0 setup requirements (builder action needed)
 
 - **Supabase → Auth → Providers:** enable **Anonymous sign-ins** (guest play) and
-  the **Email** provider (magic link). Without anonymous sign-ins, "Start
-  playing" / "continue as guest" returns an error.
+  the **Email** provider. The Email provider covers BOTH magic link and
+  **email+password** (`/signin` now offers password sign-in + create-account, with
+  magic link as an alternative). For password testing convenience, consider turning
+  **"Confirm email" OFF** (Auth → Providers → Email) so `signUp` returns a session
+  immediately; with it ON, create-account sends a confirmation email first. Without
+  anonymous sign-ins, "Start playing" returns an error.
 - **`.env.local`** must be populated from `.env.example` before the app can talk
   to Supabase. `NEXT_PUBLIC_SUPABASE_URL` must be a **full** `https://<ref>.supabase.co`
   URL. If it's missing or malformed, the app **degrades gracefully** — the proxy

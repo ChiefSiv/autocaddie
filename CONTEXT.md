@@ -148,8 +148,12 @@ scripts/gen-icons.mjs    # rasterizes SVG -> PNG app icons (npm run gen:icons)
 ## Auth flow
 
 1. Unauthenticated visit → `AuthGate` redirects to `/signin`.
-2. `/signin`: **Start playing** = `signInAnonymously()` (guest); **email** =
-   `signInWithOtp` magic link → `/auth/callback` exchanges the code.
+2. `/signin`: **Start playing** = `signInAnonymously()` (guest); **email +
+   password** = `signInWithPassword` / `signUp` (default); **magic link** =
+   `signInWithOtp` → `/auth/callback` exchanges the code (kept as an alternative).
+   OAuth still deferred. Session lives in **cookies** (`createBrowserClient`), so the
+   `proxy.ts` refresh keeps it alive across visits/restarts; `useUser` falls back to
+   the local session offline.
 3. `proxy.ts` (`updateSession`) refreshes the session cookie on each request.
    Nothing gates *playing* — a guest session is enough.
 
