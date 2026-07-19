@@ -50,16 +50,21 @@ function RoundHome({ eventId }: { eventId: string }) {
     setEditing(true);
   };
   const saveEdit = async () => {
-    await updateHc.mutateAsync({
-      eventId,
-      allowanceMode,
-      course,
-      field: round.players.map((p) => ({
-        roundPlayerId: p.id,
-        handicapIndex: draft[p.id] == null || draft[p.id] === "" ? null : Number(draft[p.id]),
-      })),
-    });
-    setEditing(false);
+    try {
+      await updateHc.mutateAsync({
+        eventId,
+        allowanceMode,
+        course,
+        field: round.players.map((p) => ({
+          roundPlayerId: p.id,
+          handicapIndex: draft[p.id] == null || draft[p.id] === "" ? null : Number(draft[p.id]),
+        })),
+      });
+      setEditing(false); // only close on a CONFIRMED save
+    } catch {
+      // Keep edit mode open with the typed values; the error is surfaced below so
+      // the change never silently reverts.
+    }
   };
 
   return (
@@ -165,6 +170,11 @@ function RoundHome({ eventId }: { eventId: string }) {
             </div>
           ))}
         </div>
+        {editing && updateHc.error && (
+          <p role="alert" className="mt-2 text-xs text-down">
+            {(updateHc.error as Error).message}
+          </p>
+        )}
         {editing && (
           <p className="mt-2 text-xs text-muted">
             Handicaps stay editable after the lineup locks. This recomputes strokes,

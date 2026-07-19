@@ -30,6 +30,13 @@ the playable end-to-end path; these are surfaces/polish/robustness.
   rewrites every `round_players` course/playing handicap; net/standings/settle
   recompute downstream. Lineup stays locked. A settled round must be re-settled
   (ledger upserts in place, resets paid on changed amounts) — tested.
+  - **`round_players` RLS does NOT block updates on `status='completed'`** —
+    verified against the live DB (active update → 1 row; set completed; completed
+    update → 1 row, persisted). Editing handicaps on a settled round works. The
+    earlier "silent revert" was a client artifact (an UPDATE with no `.select()`
+    can't distinguish 0-row from success). Fixed: the mutation `.select()`s and
+    throws on 0 rows, the editor surfaces the error and stays open (never a silent
+    revert), and it closes only after the round refetch completes.
 - **Skins gross toggle** — Skins is net-locked in the UI; spec allows gross-optional.
 - **`RoundTemplate` prefill** at setup (schema + Home cards exist; setup ignores it).
 - **Graywolf duplicate "White" tee** — cache-dedup gap in `courses/cache.ts` or the

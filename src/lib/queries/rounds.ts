@@ -83,20 +83,34 @@ export function useUpdateRoundHandicaps() {
       const byId = new Map(computed.map((c) => [c.id, c]));
       for (const p of input.field) {
         const c = byId.get(p.roundPlayerId)!;
-        const { error } = await supabase
+        // `.select()` makes the UPDATE return the affected rows. A silent 0-row
+        // result (RLS filtered the row, or an id mismatch) is NOT an error in
+        // PostgREST — so we check the row count and throw LOUDLY rather than let
+        // the caller think it saved. A silent revert is how a wrong handicap
+        // slips into the ledger unnoticed.
+        const { data, error } = await supabase
           .from("round_players")
           .update({
             handicap_index: p.handicapIndex,
             course_handicap: c.courseHandicap,
             playing_handicap: c.strokesGiven,
           })
-          .eq("id", p.roundPlayerId);
+          .eq("id", p.roundPlayerId)
+          .select("id");
         if (error) throw new Error(error.message);
+        if (!data || data.length === 0) {
+          throw new Error(
+            "Handicap change didn't save — no row was updated (permissions or the round moved). Nothing was written.",
+          );
+        }
       }
     },
-    onSuccess: (_r, input) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.event(input.eventId) });
-    },
+    // Return the invalidation so mutateAsync only resolves AFTER the round refetch
+    // completes — the editor then closes on genuinely fresh data (no stale-cache
+    // race that could look like a revert). RLS allows this update even when the
+    // event is 'completed' (verified against the live DB), so persistence is real.
+    onSuccess: (_r, input) =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.event(input.eventId) }),
   });
 }
 
