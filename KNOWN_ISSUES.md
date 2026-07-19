@@ -171,12 +171,16 @@ an anon client.
   unique-on-(course_id, name[, gender]) guard or upsert, and de-dupe existing rows.
 - ✅ **Season-to-date zero state — done.** Now shows "$0 with this crew" in the
   setup picker and per-player on settle-up (live `SUM(ledger_entries.amount)`).
-- **Mark-as-paid is a LOCAL checklist (not synced).** On settle-up, marking a
-  payment paid persists to `localStorage` per event (offline-safe; "we just track
-  it"). It does NOT write the ledger `paid` flag (that flag is per-player-net, set
-  on settle per the amount-changed policy; payments are minimized cross-player and
-  don't map 1:1 to entries). Cross-device sync of the paid checklist is a later
-  nicety. Season-to-date sums `amount` regardless of `paid` (correct).
+- ✅ **Mark-as-paid writes the durable ledger** (`ledger_entries.paid`). The ledger
+  is the source of truth; a per-payment `localStorage` checklist gives immediate,
+  per-payment feedback within a session. Reconciliation: a **player is settled once
+  every minimized payment touching them is paid** → that player's `paid` flag is
+  written. Reads seed from the ledger (a settled endpoint ⇒ the transaction shows
+  paid), so it survives across devices / data clears. Pre-settle marks are carried
+  into the ledger when you settle. `buildLedgerRows`' policy is now live (re-settle
+  preserves `paid` when the amount is unchanged, resets it when it changes).
+  Known simplification: with only per-player storage, a *partially*-paid
+  multi-payment debtor reads unpaid on another device until fully settled.
 - **`settlements` table is unused so far.** Settle-up recomputes from scores each
   time and writes `ledger_entries` (the durable payoff). Persisting a `settlements`
   row (combined JSON snapshot) is optional record-keeping for later.
