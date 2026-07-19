@@ -5,28 +5,25 @@
 
 ## Status
 
-**Phases 0 and 1 complete; Phase 2 (gameplay) in progress.** Foundation (PWA,
-auth, theming), full schema + durable persistence + RLS (applied to Supabase),
-CourseDataProvider + cache, handicap/stroke engine, and the real Home + TanStack
-data layer are all built and verified. **Phase 2 started engines-first:** the
-Skins / Nassau / Match Play game engines + the settlement engine are built as
-pure, tested functions (`src/lib/games/`), GREEN before any UI — see
-[claude-code-build-prompt-phase-2.md](claude-code-build-prompt-phase-2.md).
-The full Phase 2 path is built: **setup + SI gate** (`/play`), **hole-entry +
-live scoring + local-first** (`/score`), **recap** (`/recap`), **two-pane
-scorecard** (`/card`), and **settle-up with the durable ledger written on settle**
-(`/settle`). The `ledger_unique` migration is applied to remote. Remaining polish:
-full round-home hero/strip.
+**Phases 0, 1, and 2 complete — all verified by hand on a prod build.** Foundation
+(PWA, auth, theming), full schema + durable persistence + RLS, CourseDataProvider +
+cache, and the handicap/stroke engine are Phase 0–1. **Phase 2 (gameplay) is done**
+and playable end-to-end: engines-first (Skins/Nassau/Match + settlement, pure &
+tested), then **setup + mandatory SI gate** (`/play`), **hole-entry + live scoring +
+local-first** (`/score`), **recap** (`/recap`), **two-pane scorecard** (`/card`),
+and **settle-up writing the durable crew ledger** (`/settle`), with a **round
+subnav** across all sub-routes. Email+password sign-in + password reset added. 87
+tests; tsc + eslint + `next build` green. Every §13 Definition-of-Done gate passed
+by hand (see PHASE_PROGRESS). **→ Next: Phase 3 (multi-group outings + live
+multi-phone sync), starting with round-history browsing.**
 
-**Open items to carry into Phase 2:**
-1. **Manual stroke-index entry is a MANDATORY core path.** Real courses (e.g.
-   Graywolf) return empty per-hole stroke indexes from GolfCourseAPI, so
-   round-setup must let the scorekeeper confirm/enter SI before scoring;
-   `allocateStrokes` throws until SI is complete (gate with
-   `holesMissingStrokeIndex` / `CachedCourse.needsStrokeIndex`).
-2. **`SUPABASE_SERVICE_ROLE_KEY` in `.env.local` is currently the anon key** —
-   replace with the real service-role secret for any RLS-bypass task. Course
-   caching deliberately uses the authenticated client, so nothing is blocked.
+**Carry-forward into Phase 3 (see KNOWN_ISSUES "Deferred ledger" for the full list):**
+1. **No round-history UI** — `/rounds` is a Phase 0 stub; settled rounds reopen only
+   by `event_id` URL. Data persists; the browsing surface is the first Phase 3 need.
+2. **Round-home is a first cut** (not the full single-game hero / 2+ swipe strip).
+3. **`SUPABASE_SERVICE_ROLE_KEY` in `.env.local` is the anon key** — replace with the
+   real service-role secret for any RLS-bypass task (course caching uses the
+   authenticated client, so nothing is blocked today).
 
 ## What this is
 

@@ -140,9 +140,11 @@ mandatory manual stroke-index entry; fix `SUPABASE_SERVICE_ROLE_KEY`.**
 
 ---
 
-## Phase 2 — Gameplay  (🔶 IN PROGRESS — engines-first)
+## Phase 2 — Gameplay  (✅ COMPLETE)
 
-Build order: **engines GREEN before any UI**, then setup → play → recap → settle.
+Build order was **engines GREEN before any UI**, then setup → play → recap →
+settle. **All §13 gates verified by hand on a prod build** (see checklist at the
+end of this section). 87 tests; tsc + eslint + `next build` all green.
 
 ### §2.5 durable schema verification (no migration needed)
 - ✅ Re-verified Phase 1's schema satisfies all four durable requirements:
@@ -151,11 +153,12 @@ Build order: **engines GREEN before any UI**, then setup → play → recap → 
   NULL` ⇒ crewless writes no ledger), crew-scoped `ledger_entries`, retained
   `hole_scores`. **PASS — went straight to gameplay.**
 
-### Ledger idempotency  ✅ (additive migration)
+### Ledger idempotency  ✅ (additive migration, APPLIED)
 - ✅ `20260628120005_ledger_unique.sql`: `UNIQUE (event_id, player_id)` on
   `ledger_entries`; settle upserts `ON CONFLICT DO UPDATE`. Paid-flag resets only
-  when the amount changed. Documented in CONTEXT.md. **Not yet `db push`ed** —
-  apply with the settle-write UI step.
+  when the amount changed. **Pushed to remote** via `supabase db push`. Verified by
+  hand: double-settle / score-edit re-settle / settle-after-end-early never
+  double-write.
 
 ### Game engines  ✅ (pure + tested, GREEN)
 - ✅ `src/lib/games/`: `types.ts` (shared contract), `skins.ts`, `nassau.ts`,
@@ -236,14 +239,43 @@ Build order: **engines GREEN before any UI**, then setup → play → recap → 
   multi-game combined settlement (minimized ≠ pairwise, stakes-off = $0). 87 total;
   tsc + eslint + build green.
 
-### Remaining (UI + persistence)  ⬜
-- ⬜ Round home full (single-game hero / 2+ swipe strip).
-- ⬜ Hole-entry screen (all players, gross, stroke dots, pick-up, live standings).
-- ⬜ Two-pane scorecard (split panes, gross+net, tap-to-jump).
-- ⬜ Recap → settle-up (minimized + by-game toggle, mark-as-paid, end-early,
-  **writes LedgerEntry**, season-to-date figure).
-- ⬜ Local-first in-progress round (Dexie outbox); lock-after-hole-1;
-  recompute-on-edit.
+### Mark-paid → ledger, round nav, auth polish  ✅
+- ✅ **Mark Paid writes `ledger_entries.paid`** (durable source of truth):
+  `useEventLedger` reads, `useMarkLedgerPaid` writes; a player is settled once every
+  minimized payment touching them is paid; survives reload/devices. Match Play
+  by-game shows result per perspective (winner "Won 4 & 3", loser "Lost").
+- ✅ **Round subnav** (`round-subnav.tsx`) on every sub-route (`/score` `/card`
+  `/recap` `/settle`): back-to-round + tabs — fixes PWA dead ends; "Settle" tab is
+  the end-early path from score entry.
+- ✅ **Email + password sign-in** + create-account + **password reset**
+  (`/auth/reset-password`, recovery routed through `/auth/callback`); magic link &
+  guest retained. Session persistence confirmed correct (cookie-based; not a bug).
+- ✅ Offline reload of a round now rehydrates (SW route-warming + `useUser`
+  getSession fallback) instead of dropping to `/offline`.
+
+### §13 Definition of Done — walk-through
+- ✅ Self-play a full 18 (4 fake players) start to finish.
+- ✅ Players durable — reusable crew roster; a 2nd round reuses them, no duplicates,
+  no free-text names.
+- ✅ Settle writes a `LedgerEntry`; season-to-date sums two rounds (verified).
+- ✅ Skins pot / carryovers / winners correct vs hand count.
+- ✅ Nassau front/back/18 + 9-hole single-bet settle correctly.
+- ✅ Match play status reads right and closes ("3 & 2"); dormie boundary correct.
+- ✅ Pick-up behaves in each game; editing a past hole recomputes.
+- ✅ Combined settle-up nets correctly; both views; mark-as-paid; end-early.
+- ✅ Scorecard freeze holds while scrolling; gross+net shown.
+- ✅ Round in progress survives going offline and reopening.
+- ✅ Looks like the mockups in light and dark.
+- ✅ `PHASE_PROGRESS.md` complete; `CONTEXT.md` updated.
+- 🔶 **Not fully met — round-home is a "first cut"**, not the full §8 single-game
+  hero / 2+ swipe strip (it lists players/games/join-code + nav). Functional, not
+  final polish. **Deferred to Phase 3** (see KNOWN_ISSUES "Deferred ledger").
+- 🚫 **No round-history browsing UI** — `/rounds` is still a Phase 0 stub; a settled
+  round reopens only by `event_id` URL. Data persists; the surface is missing.
+  Deferred per §3 → **first thing Phase 3 needs** (see KNOWN_ISSUES).
+
+**Phase 2 is complete and playable end-to-end. → Next handoff: Phase 3 (multi-group
+outings + live multi-phone sync), starting with round-history browsing.**
 
 ---
 
