@@ -33,6 +33,9 @@ export interface RoundView {
   courseName: string | null;
   teeName: string | null;
   teeSetId: string | null;
+  teeRating: number | null;
+  teeSlope: number | null;
+  teePar: number | null;
   holes: { number: number; par: number; strokeIndex: number | null }[];
   groupId: string | null;
   players: RoundPlayerView[];
@@ -49,7 +52,7 @@ export function useEvent(eventId: string) {
       const { data: e } = await supabase
         .from("events")
         .select(
-          "id, status, date, join_code, holes_to_play, which_nine, allowance_mode, crew_id, tee_set_id, course:courses(name), tee:tee_sets(name)",
+          "id, status, date, join_code, holes_to_play, which_nine, allowance_mode, crew_id, tee_set_id, course:courses(name), tee:tee_sets(name, rating, slope, par)",
         )
         .eq("id", eventId)
         .maybeSingle();
@@ -116,6 +119,9 @@ export function useEvent(eventId: string) {
         courseName: e.course?.name ?? null,
         teeName: e.tee?.name ?? null,
         teeSetId: e.tee_set_id,
+        teeRating: e.tee?.rating ?? null,
+        teeSlope: e.tee?.slope ?? null,
+        teePar: e.tee?.par ?? null,
         holes,
         groupId: group?.id ?? null,
         players,
@@ -130,6 +136,81 @@ export function useEvent(eventId: string) {
       };
     },
     staleTime: 15_000,
+  });
+}
+
+export interface MyRound {
+  id: string;
+  date: string | null;
+  status: string;
+  holesToPlay: number;
+  whichNine: string | null;
+  courseName: string | null;
+  crewName: string | null;
+  /** the current user's net for a SETTLED round (via their linked player); null otherwise */
+  myNet: number | null;
+}
+
+/**
+ * The current user's rounds for the history list (read-only browsing over data
+ * that already persists). RLS scopes `events` to accessibility; `myNet` sums the
+ * ledger entries for players linked to this user (only present once settled).
+ */
+export function useMyRounds(limit = 30) {
+  return useQuery({
+    queryKey: ["my-rounds", limit],
+    queryFn: async (): Promise<MyRound[]> => {
+      if (!hasSupabaseEnv()) return [];
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data: myPlayers } = await supabase
+        .from("players")
+        .select("id")
+        .eq("linked_user_id", user.id);
+      const myPlayerIds = new Set((myPlayers ?? []).map((p) => p.id));
+
+      const { data: events } = await supabase
+        .from("events")
+        .select(
+          "id, date, status, holes_to_play, which_nine, created_at, crew:crews(name), course:courses(name)",
+        )
+        .order("date", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      const list = events ?? [];
+
+      const netByEvent: Record<string, number> = {};
+      if (myPlayerIds.size > 0 && list.length > 0) {
+        const { data: ledger } = await supabase
+          .from("ledger_entries")
+          .select("event_id, player_id, amount")
+          .in(
+            "event_id",
+            list.map((e) => e.id),
+          );
+        for (const l of ledger ?? []) {
+          if (l.event_id && myPlayerIds.has(l.player_id)) {
+            netByEvent[l.event_id] = (netByEvent[l.event_id] ?? 0) + Number(l.amount);
+          }
+        }
+      }
+
+      return list.map((e) => ({
+        id: e.id,
+        date: e.date,
+        status: e.status,
+        holesToPlay: e.holes_to_play,
+        whichNine: e.which_nine,
+        courseName: e.course?.name ?? null,
+        crewName: e.crew?.name ?? null,
+        myNet: e.id in netByEvent ? netByEvent[e.id] : null,
+      }));
+    },
+    staleTime: 30_000,
   });
 }
 

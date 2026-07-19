@@ -48,6 +48,58 @@ export interface CreatedRound {
  * mapped from player_id to the created round_player id so the engines key off the
  * in-round identity. Sets status to 'active' (SETUP → PLAY).
  */
+export interface FieldHandicap {
+  roundPlayerId: string;
+  handicapIndex: number | null;
+}
+
+/**
+ * Edit handicaps for an in-progress (or settled) round. Because the round-level
+ * "relative" allowance derives from the FIELD's lowest, editing one player can
+ * shift everyone's allocation — so we recompute the WHOLE field and rewrite every
+ * round_player's course/playing handicap. Downstream net/standings/settle recompute
+ * automatically (they read round_players.playing_handicap via useEvent). Lineup
+ * stays locked; only handicap values change. A settled round must be RE-settled
+ * afterwards (the ledger upsert updates in place and resets paid on changed amounts).
+ */
+export function useUpdateRoundHandicaps() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      eventId: string;
+      field: FieldHandicap[];
+      course: { slope: number; courseRating: number; par: number };
+      allowanceMode: AllowanceMode;
+    }): Promise<void> => {
+      const supabase = createClient();
+      const computed = computeRoundHandicaps(
+        input.field.map((p) => ({
+          id: p.roundPlayerId,
+          handicapIndex: p.handicapIndex ?? 0,
+        })),
+        input.course,
+        input.allowanceMode,
+      );
+      const byId = new Map(computed.map((c) => [c.id, c]));
+      for (const p of input.field) {
+        const c = byId.get(p.roundPlayerId)!;
+        const { error } = await supabase
+          .from("round_players")
+          .update({
+            handicap_index: p.handicapIndex,
+            course_handicap: c.courseHandicap,
+            playing_handicap: c.strokesGiven,
+          })
+          .eq("id", p.roundPlayerId);
+        if (error) throw new Error(error.message);
+      }
+    },
+    onSuccess: (_r, input) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.event(input.eventId) });
+    },
+  });
+}
+
 export function useCreateRound() {
   const queryClient = useQueryClient();
   return useMutation({

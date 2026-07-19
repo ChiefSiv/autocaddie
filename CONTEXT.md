@@ -18,8 +18,9 @@ by hand (see PHASE_PROGRESS). **→ Next: Phase 3 (multi-group outings + live
 multi-phone sync), starting with round-history browsing.**
 
 **Carry-forward into Phase 3 (see KNOWN_ISSUES "Deferred ledger" for the full list):**
-1. **No round-history UI** — `/rounds` is a Phase 0 stub; settled rounds reopen only
-   by `event_id` URL. Data persists; the browsing surface is the first Phase 3 need.
+1. **Round history shipped (Phase 2.x)** — `/rounds` lists the user's rounds
+   (read-only) and links into them; in-round handicap editing recomputes the field
+   and re-settles in place. Still owed: a per-crew **ledger/season browsing** view.
 2. **Round-home is a first cut** (not the full single-game hero / 2+ swipe strip).
 3. **`SUPABASE_SERVICE_ROLE_KEY` in `.env.local` is the anon key** — replace with the
    real service-role secret for any RLS-bypass task (course caching uses the

@@ -1,11 +1,12 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import { AppHeader } from "@/components/nav/app-header";
 import { AuthGate } from "@/components/auth/auth-gate";
 import { SectionHeader } from "@/components/ui/section";
 import { useEvent } from "@/lib/queries/events";
+import { useUpdateRoundHandicaps } from "@/lib/queries/rounds";
 import { useWarmRouteCache } from "@/lib/offline/warm-route";
 
 // Round home — FIRST CUT (build prompt §8). Confirms the round persisted (players
@@ -16,6 +17,9 @@ import { useWarmRouteCache } from "@/lib/offline/warm-route";
 function RoundHome({ eventId }: { eventId: string }) {
   useWarmRouteCache(); // keep the round reachable on an offline reload
   const { data: round, isLoading } = useEvent(eventId);
+  const updateHc = useUpdateRoundHandicaps();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<Record<string, string>>({});
 
   if (isLoading) {
     return <div className="h-40 animate-pulse rounded-lg bg-field" />;
@@ -30,6 +34,33 @@ function RoundHome({ eventId }: { eventId: string }) {
       </main>
     );
   }
+
+  const course = {
+    slope: round.teeSlope ?? 113,
+    courseRating: round.teeRating ?? round.teePar ?? 72,
+    par: round.teePar ?? 72,
+  };
+  const allowanceMode = round.allowanceMode === "relative" ? "relative" : "full";
+  const startEdit = () => {
+    setDraft(
+      Object.fromEntries(
+        round.players.map((p) => [p.id, p.handicapIndex != null ? String(p.handicapIndex) : ""]),
+      ),
+    );
+    setEditing(true);
+  };
+  const saveEdit = async () => {
+    await updateHc.mutateAsync({
+      eventId,
+      allowanceMode,
+      course,
+      field: round.players.map((p) => ({
+        roundPlayerId: p.id,
+        handicapIndex: draft[p.id] == null || draft[p.id] === "" ? null : Number(draft[p.id]),
+      })),
+    });
+    setEditing(false);
+  };
 
   return (
     <main className="flex flex-1 flex-col pb-10">
@@ -59,7 +90,38 @@ function RoundHome({ eventId }: { eventId: string }) {
       )}
 
       <section>
-        <SectionHeader title={`Players · ${round.players.length}`} />
+        <SectionHeader
+          title={`Players · ${round.players.length}`}
+          action={
+            editing ? (
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEditing(false)}
+                  className="font-label text-xs font-semibold uppercase tracking-[0.06em] text-muted"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={saveEdit}
+                  disabled={updateHc.isPending}
+                  className="font-label text-xs font-semibold uppercase tracking-[0.06em] text-fairway disabled:opacity-60"
+                >
+                  {updateHc.isPending ? "Saving…" : "Save"}
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={startEdit}
+                className="font-label text-xs font-semibold uppercase tracking-[0.06em] text-fairway"
+              >
+                Edit handicaps
+              </button>
+            )
+          }
+        />
         <div className="overflow-hidden rounded-lg border border-line bg-card shadow-card">
           {round.players.map((p) => (
             <div
@@ -67,27 +129,57 @@ function RoundHome({ eventId }: { eventId: string }) {
               className="flex items-center justify-between border-b border-line px-4 py-3 last:border-b-0"
             >
               <div className="font-bold">{p.displayName}</div>
-              <div className="flex items-center gap-4 text-right">
-                <div>
-                  <div className="font-display text-lg font-extrabold leading-none">
-                    {p.courseHandicap ?? "—"}
+              {editing ? (
+                <label className="flex items-center gap-2">
+                  <span className="font-label text-[9px] uppercase tracking-[0.1em] text-muted">
+                    index
+                  </span>
+                  <input
+                    inputMode="decimal"
+                    aria-label={`${p.displayName} handicap index`}
+                    value={draft[p.id] ?? ""}
+                    onChange={(e) => setDraft((d) => ({ ...d, [p.id]: e.target.value }))}
+                    className="font-display w-16 rounded-md border border-line bg-field px-2 py-1 text-center text-lg font-extrabold outline-none focus:border-fairway"
+                  />
+                </label>
+              ) : (
+                <div className="flex items-center gap-4 text-right">
+                  <div>
+                    <div className="font-display text-lg font-extrabold leading-none">
+                      {p.courseHandicap ?? "—"}
+                    </div>
+                    <div className="font-label text-[9px] uppercase tracking-[0.1em] text-muted">
+                      course
+                    </div>
                   </div>
-                  <div className="font-label text-[9px] uppercase tracking-[0.1em] text-muted">
-                    course
+                  <div>
+                    <div className="font-display text-lg font-extrabold leading-none text-fairway">
+                      {p.playingHandicap ?? "—"}
+                    </div>
+                    <div className="font-label text-[9px] uppercase tracking-[0.1em] text-muted">
+                      strokes
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <div className="font-display text-lg font-extrabold leading-none text-fairway">
-                    {p.playingHandicap ?? "—"}
-                  </div>
-                  <div className="font-label text-[9px] uppercase tracking-[0.1em] text-muted">
-                    strokes
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           ))}
         </div>
+        {editing && (
+          <p className="mt-2 text-xs text-muted">
+            Handicaps stay editable after the lineup locks. This recomputes strokes,
+            net scores and live standings.
+            {round.status === "completed"
+              ? " This round is settled — re-settle to update the ledger."
+              : ""}
+          </p>
+        )}
+        {!editing && round.status === "completed" && (
+          <p className="mt-2 text-xs text-muted">
+            Settled. Editing a handicap or score requires re-settling to update the
+            ledger.
+          </p>
+        )}
       </section>
 
       <section className="mt-6">

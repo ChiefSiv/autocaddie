@@ -274,8 +274,25 @@ end of this section). 87 tests; tsc + eslint + `next build` all green.
   round reopens only by `event_id` URL. Data persists; the surface is missing.
   Deferred per §3 → **first thing Phase 3 needs** (see KNOWN_ISSUES).
 
-**Phase 2 is complete and playable end-to-end. → Next handoff: Phase 3 (multi-group
-outings + live multi-phone sync), starting with round-history browsing.**
+**Phase 2 is complete and playable end-to-end.**
+
+### Phase 2.x cleanup (post-completion)  ✅
+- ✅ **Round history** (`/rounds`): read-only list of the user's rounds (course,
+  date, holes, crew, status, their net for settled rounds via linked-player ledger);
+  tap → in-progress opens `/score`, completed opens `/recap`. `useMyRounds` scoped by
+  RLS. No editing/standings (§3 verbs still deferred). Per-crew ledger/season view is
+  the remaining Phase 3 companion.
+- ✅ **In-round handicap editor** (round-home "Edit handicaps"):
+  `useUpdateRoundHandicaps` recomputes the **whole field** (relative allowance
+  depends on the field min) and rewrites every `round_players` course/playing
+  handicap; net/standings/settle recompute downstream via the same path as a score
+  edit. Lineup stays locked. Settled rounds re-settle in place (ledger upsert, paid
+  reset on changed amount). `useEvent` now carries tee rating/slope/par.
+- ✅ Tests (+5, 92 total): recompute path (index change → net/settlement change),
+  relative-allowance whole-field recompute, re-settle-after-change idempotency
+  (one row/player, paid reset on change / preserved when unchanged).
+
+**→ Next handoff: Phase 3 (multi-group outings + live multi-phone sync).**
 
 ---
 

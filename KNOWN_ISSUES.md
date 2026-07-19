@@ -9,14 +9,15 @@ Everything intentionally deferred during Phase 2, one place. Nothing here blocks
 the playable end-to-end path; these are surfaces/polish/robustness.
 
 **Phase 3 — first, for practical use**
-- **No round-history browsing UI.** `/rounds` is still the Phase 0 stub, so a
-  settled round can only be reopened by its `event_id` URL. **Data persists
-  correctly** (events, hole_scores, ledger, season-to-date all durable) — only the
-  browsing surface is missing. Deferred per §3, but it's the **first thing Phase 3
-  needs** to be usable across rounds (list recent/settled rounds → open card/settle;
-  a per-crew ledger/season view is the natural companion).
+- ✅ **Round-history browsing — DONE (Phase 2.x).** `/rounds` lists the user's rounds
+  (course, date, holes, crew, status, and their net for settled rounds); tap →
+  in-progress opens score entry, completed opens recap. Read-only (no editing/
+  deletion/standings — §3 verbs still deferred). **Still owed for Phase 3:** a
+  per-crew **ledger / season view** (the natural companion; season-to-date exists as
+  a number, no browsing surface yet).
 - **Round-home is a "first cut."** Not the full §8 single-game hero / 2+ swipe
-  strip; today it lists players/games/join-code + nav. Functional, needs polish.
+  strip; today it lists players/games/join-code + nav (+ handicap editor). Needs
+  polish.
 - **Live multi-phone sync + join-by-code UI.** Schema (`join_code`,
   `join_event_by_code` RPC, per-group `scoring_mode`) exists; the join screen and
   realtime broadcast are Phase 3 (single-device solo is the Phase 2 model).
@@ -24,9 +25,11 @@ the playable end-to-end path; these are surfaces/polish/robustness.
 **Phase 2.x — small, high-value follow-ups**
 - **Edit-round escape hatch** (confirmation-gated) for genuine setup errors (wrong
   tee/player) after the hole-1 lineup lock.
-- **In-round handicap editor** — spec says handicaps stay editable post-lock;
-  currently they're snapshotted at setup with no in-round editor (scores ARE
-  editable). Build with the escape hatch.
+- ✅ **In-round handicap editor — DONE (Phase 2.x).** Round-home "Edit handicaps"
+  recomputes the WHOLE field (relative allowance depends on the field min) and
+  rewrites every `round_players` course/playing handicap; net/standings/settle
+  recompute downstream. Lineup stays locked. A settled round must be re-settled
+  (ledger upserts in place, resets paid on changed amounts) — tested.
 - **Skins gross toggle** — Skins is net-locked in the UI; spec allows gross-optional.
 - **`RoundTemplate` prefill** at setup (schema + Home cards exist; setup ignores it).
 - **Graywolf duplicate "White" tee** — cache-dedup gap in `courses/cache.ts` or the
